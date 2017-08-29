@@ -3,6 +3,9 @@ plugins {
     id 'de.dfki.mary.voicebuilding-festvox' version '5.2.0'
 }
 
+group 'de.dfki.mary'
+version '5.2-SNAPSHOT'
+
 voice {
     name = 'cmu-awb-time'
     language = 'en'
