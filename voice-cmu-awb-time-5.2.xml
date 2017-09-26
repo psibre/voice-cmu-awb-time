@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0">
+  <info organisation="de.dfki.mary" module="voice-cmu-awb-time" revision="5.2" status="integration" publication="20170919222340"/>
+  <configurations/>
+  <publications>
+    <artifact name="voice-cmu-awb-time" type="zip" ext="zip"/>
+  </publications>
+  <dependencies/>
+</ivy-module>
