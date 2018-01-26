@@ -1,0 +1,26 @@
+branches:
+  only:
+  - master
+
+language: groovy
+
+jdk:
+  - oraclejdk8
+  - openjdk8
+
+addons:
+  apt:
+    packages:
+    - praat
+    - sox
+    - speech-tools
+
+before_install:
+  - ./gradlew legacyInit
+
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
