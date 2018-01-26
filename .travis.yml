@@ -8,6 +8,13 @@ jdk:
   - oraclejdk8
   - openjdk8
 
+addons:
+  apt:
+    packages:
+    - praat
+    - sox
+    - speech-tools
+
 before_install:
   - ./gradlew legacyInit
 
