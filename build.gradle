@@ -38,3 +38,11 @@ dependencies {
 text.srcFileName = 'time.data'
 
 legacyInit.dependsOn wav, text, lab
+
+generateVoiceConfig {
+    afterEvaluate {
+        config << [
+                exampleTextFile: "jar:/marytts/voice/$voice.nameCamelCase/exampleText.txt",
+        ]
+    }
+}
