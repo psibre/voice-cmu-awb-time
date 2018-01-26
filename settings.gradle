@@ -1,7 +1,1 @@
 rootProject.name = 'voice-cmu-awb-time'
-pluginManagement.repositories {
-    maven {
-        url 'https://dl.bintray.com/marytts/marytts'
-    }
-    gradlePluginPortal()
-}
