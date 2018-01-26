@@ -6,17 +6,17 @@ A male Scottish English limited-domain unit selection voice for [MaryTTS](http:/
 
 ## Prerequisites
 
-You will need to have [Java](https://www.java.com/), [Praat](http://praat.org/), [SoX](http://sox.sourceforge.net/), and the [Edinburgh Speech Tools](http://www.cstr.ed.ac.uk/projects/speech_tools/) installed.
+You will need to have [Java](https://www.java.com/), [SoX](http://sox.sourceforge.net/), and the [Edinburgh Speech Tools](http://www.cstr.ed.ac.uk/projects/speech_tools/) installed.
 On OSX with [Homebrew](http://brew.sh/), do
 ```
-$ brew cask install java praat
+$ brew cask install java
 $ brew install sox speech-tools
 ```
 as needed.
 
 On Debian-based Linux (including Ubuntu), do
 ```
-$ sudo apt-get install default-jdk praat sox speech-tools
+$ sudo apt-get install default-jdk sox speech-tools
 ```
 accordingly.
 
