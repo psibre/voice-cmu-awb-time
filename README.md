@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/marytts/voice-cmu-awb-time.svg?branch=master)](https://travis-ci.org/marytts/voice-cmu-awb-time)
+
 # voice-cmu-awb-time
 
 A male Scottish English limited-domain unit selection voice for [MaryTTS](http://mary.dfki.de/) built from [recordings provided by CMU](http://festvox.org/cmu_arctic/)
