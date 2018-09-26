@@ -6,7 +6,7 @@ plugins {
 group 'de.dfki.mary'
 version '5.3-SNAPSHOT'
 
-voice {
+marytts.voice {
     name = 'cmu-awb-time'
     language = 'en'
     region = 'US'
@@ -35,14 +35,14 @@ dependencies {
     data group: 'org.festvox', name: 'cmu_time_awb', classifier: 'ldom', ext: 'tar.bz2'
 }
 
-text.srcFileName = 'time.data'
+text.srcFile = file("$sourceSets.data.output.resourcesDir/time.data")
 
 legacyInit.dependsOn wav, text, lab
 
 generateVoiceConfig {
     afterEvaluate {
-        config << [
-                exampleTextFile: "jar:/marytts/voice/$voice.nameCamelCase/exampleText.txt",
+        config.get() << [
+                exampleTextFile: "jar:/marytts/voice/$marytts.voice.nameCamelCase/exampleText.txt",
         ]
     }
 }
