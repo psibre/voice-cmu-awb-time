@@ -35,9 +35,21 @@ dependencies {
     data group: 'org.festvox', name: 'cmu_time_awb', classifier: 'ldom', ext: 'tar.bz2'
 }
 
-text.srcFile = file("$sourceSets.data.output.resourcesDir/time.data")
+text {
+    srcFile = file("$sourceSets.data.output.resourcesDir/time.data")
+}
 
-legacyInit.dependsOn wav, text, lab
+legacyInit {
+    dependsOn wav, text, lab
+}
+
+generateAllophones {
+    srcDir = text.destDir
+}
+
+legacyTranscriptionAligner {
+    dependsOn legacyInit
+}
 
 generateVoiceConfig {
     afterEvaluate {
