@@ -40,15 +40,12 @@ text {
 }
 
 legacyInit {
-    dependsOn wav, text, lab
+    textDir = text.destDir
+    labDir = lab.destDir
 }
 
 generateAllophones {
     srcDir = text.destDir
-}
-
-legacyTranscriptionAligner {
-    dependsOn legacyInit
 }
 
 generateVoiceConfig {
