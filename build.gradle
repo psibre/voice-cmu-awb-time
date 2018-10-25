@@ -39,7 +39,7 @@ text {
     srcFile = file("$sourceSets.data.output.resourcesDir/time.data")
 }
 
-legacyInit {
+basenames {
     textDir = text.destDir
     labDir = lab.destDir
 }
