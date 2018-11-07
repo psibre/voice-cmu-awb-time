@@ -1,3 +1,6 @@
 [submodule "buildSrc"]
-	path = buildSrc
+	path = buildSrc/gradle-marytts-voicebuilding-plugin
 	url = https://github.com/marytts/gradle-marytts-voicebuilding-plugin.git
+[submodule "buildSrc/gradle-marytts-crossvalidation-plugin"]
+	path = buildSrc/gradle-marytts-crossvalidation-plugin
+	url = https://github.com/marytts/gradle-marytts-crossvalidation-plugin.git
