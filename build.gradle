@@ -92,10 +92,20 @@ task testBasenameTimelineMaker {
     }
 }
 
+task makeWaveDatagrams(type: MakeWaveDatagrams) {
+    basenamesFile = basenames.destFile
+    sampleRate = marytts.voice.samplingRate
+    wavDir = wav.destDir
+    pmDir = pitchmarkConverter.destDir
+    destDir = layout.buildDirectory.dir('waveDatagrams')
+}
+
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import marytts.tools.voiceimport.TimelineWriter
+import marytts.tools.voiceimport.WavReader
 import marytts.util.data.Datagram
+import marytts.util.data.ESTTrackReader
 
 import javax.inject.Inject
 
@@ -123,10 +133,10 @@ class MakeBasenameDatagrams extends DefaultTask {
     @TaskAction
     void make() {
         basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
-            def srcFile = pmDir.file("${basename}.pm").get().asFile
+            def pmFile = pmDir.file("${basename}.pm").get().asFile
             def destFile = destDir.file("${basename}.json").get().asFile
             workerExecutor.submit(BasenameDatagramMaker.class) { config ->
-                config.params srcFile, destFile, sampleRate.get()
+                config.params pmFile, destFile, sampleRate.get()
             }
         }
     }
@@ -134,24 +144,24 @@ class MakeBasenameDatagrams extends DefaultTask {
 
 class BasenameDatagramMaker implements Runnable {
 
-    File srcFile
+    File pmFile
 
     File destFile
 
     int sampleRate
 
     @Inject
-    BasenameDatagramMaker(File srcFile, File destFile, int sampleRate) {
-        this.srcFile = srcFile
+    BasenameDatagramMaker(File pmFile, File destFile, int sampleRate) {
+        this.pmFile = pmFile
         this.destFile = destFile
         this.sampleRate = sampleRate
     }
 
     @Override
     void run() {
-        def lastTime = srcFile.readLines().last().split().first() as float
+        def lastTime = pmFile.readLines().last().split().first() as float
         def duration = (lastTime * sampleRate) as long
-        def basename = srcFile.name - '.pm'
+        def basename = pmFile.name - '.pm'
         def json = new JsonBuilder([
                 [
                         duration: duration,
@@ -160,6 +170,57 @@ class BasenameDatagramMaker implements Runnable {
         ])
         destFile.text = json
     }
+}
+
+class MakeWaveDatagrams extends DefaultTask {
+
+    @Input
+    Property<Integer> sampleRate = project.objects.property(Integer)
+
+    @InputFile
+    final RegularFileProperty basenamesFile = newInputFile()
+
+    @InputDirectory
+    final DirectoryProperty wavDir = newInputDirectory()
+
+    @InputDirectory
+    final DirectoryProperty pmDir = newInputDirectory()
+
+    @OutputDirectory
+    final DirectoryProperty destDir = newOutputDirectory()
+
+    @TaskAction
+    void make() {
+        basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
+            def wavFile = wavDir.file("${basename}.wav").get().asFile
+            def pmFile = pmDir.file("${basename}.pm").get().asFile
+            def destFile = destDir.file("${basename}.json").get().asFile
+            def pm = new ESTTrackReader(pmFile.path)
+            def wav = new WavReader(wavFile.path)
+            def wave = wav.samples
+            def jsonDatagrams = []
+            int frameStart
+            int frameEnd = 0
+            int duration
+            for (int f = 0; f < pm.getNumFrames(); f++) {
+                frameStart = frameEnd
+                frameEnd = (int) ((double) pm.getTime(f) * (double) (sampleRate.get()))
+                duration = frameEnd - frameStart
+                ByteArrayOutputStream buff = new ByteArrayOutputStream(2 * duration)
+                DataOutputStream subWave = new DataOutputStream(buff)
+                for (int k = 0; k < duration; k++) {
+                    subWave.writeShort(wave[frameStart + k])
+                }
+                jsonDatagrams << [
+                        duration: duration,
+                        data    : buff.toByteArray().encodeBase64().toString()
+                ]
+            }
+            def json = new JsonBuilder(jsonDatagrams)
+            destFile.text = json.toPrettyString()
+        }
+    }
+
 }
 
 class BasenameTimelineMaker extends DefaultTask {
