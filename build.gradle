@@ -68,9 +68,17 @@ generateVoiceConfig {
     }
 }
 
+task makeBasenameDatagrams(type: MakeBasenameDatagrams) {
+    basenamesFile = basenames.destFile
+    sampleRate = marytts.voice.samplingRate
+    pmDir = pitchmarkConverter.destDir
+    destDir = layout.buildDirectory.dir('basenameDatagrams')
+}
+
 task basenameTimelineMaker(type: BasenameTimelineMaker) {
     basenamesFile = basenames.destFile
-    pmDir = pitchmarkConverter.destDir
+    sampleRate = marytts.voice.samplingRate
+    srcDir = makeBasenameDatagrams.destDir
     destFile = layout.buildDirectory.file('timeline_basenames.mry')
 }
 
@@ -86,7 +94,10 @@ task testBasenameTimelineMaker {
 import marytts.tools.voiceimport.TimelineWriter
 import marytts.util.data.Datagram
 
-class BasenameTimelineMaker extends DefaultTask {
+class MakeBasenameDatagrams extends DefaultTask {
+
+    @Input
+    Property<Integer> sampleRate = project.objects.property(Integer)
 
     @InputFile
     final RegularFileProperty basenamesFile = newInputFile()
@@ -94,19 +105,50 @@ class BasenameTimelineMaker extends DefaultTask {
     @InputDirectory
     final DirectoryProperty pmDir = newInputDirectory()
 
+    @OutputDirectory
+    final DirectoryProperty destDir = newOutputDirectory()
+
+    @TaskAction
+    void make() {
+        basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
+            def pmFile = pmDir.file("${basename}.pm").get().asFile
+            def lastTime = pmFile.readLines().last().split().first() as float
+            def duration = (lastTime * sampleRate.get()) as long
+            destDir.file("${basename}.bin").get().asFile.withDataOutputStream { dos ->
+                dos.writeLong duration
+                dos.writeBytes basename
+            }
+        }
+    }
+}
+
+class BasenameTimelineMaker extends DefaultTask {
+
+    @Input
+    Property<Integer> sampleRate = project.objects.property(Integer)
+
+    @InputFile
+    final RegularFileProperty basenamesFile = newInputFile()
+
+    @InputDirectory
+    final DirectoryProperty srcDir = newInputDirectory()
+
     @OutputFile
     final RegularFileProperty destFile = newOutputFile()
 
     @TaskAction
     void make() {
-        def sampleRate = project.marytts.voice.samplingRate
-        def timeline = new TimelineWriter(destFile.get().asFile.path, '\n', sampleRate, 2.0);
+        def timeline = new TimelineWriter(destFile.get().asFile.path, '\n', sampleRate.get(), 2.0);
         basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
-            def pmFile = pmDir.file("${basename}.pm").get().asFile
-            def lastTime = pmFile.readLines().last().split().first() as float
-            def duration = (lastTime * sampleRate) as int
-            def datagram = new Datagram(duration, basename.bytes)
-            timeline.feed(datagram, sampleRate)
+            def datagramFile = srcDir.file("${basename}.bin").get().asFile
+            def duration
+            def data
+            datagramFile.withDataInputStream { dis ->
+                duration = dis.readLong()
+                data = dis.bytes
+            }
+            def datagram = new Datagram(duration, data)
+            timeline.feed(datagram, sampleRate.get())
         }
         timeline.close()
     }
