@@ -1,3 +1,15 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath("de.dfki.mary:marytts-builder:5.2") {
+            exclude group: '*', module: 'mwdumper'
+            exclude group: '*', module: 'sgt'
+        }
+    }
+}
+
 plugins {
     id 'de.dfki.mary.voicebuilding-legacy'
     id 'de.dfki.mary.voicebuilding-festvox'
@@ -53,5 +65,49 @@ generateVoiceConfig {
         config.get() << [
                 exampleTextFile: "jar:/marytts/voice/$marytts.voice.nameCamelCase/exampleText.txt",
         ]
+    }
+}
+
+task basenameTimelineMaker(type: BasenameTimelineMaker) {
+    basenamesFile = basenames.destFile
+    pmDir = pitchmarkConverter.destDir
+    destFile = layout.buildDirectory.file('timeline_basenames.mry')
+}
+
+task testBasenameTimelineMaker {
+    dependsOn basenameTimelineMaker, legacyBasenameTimelineMaker
+    doLast {
+        def actual = basenameTimelineMaker.destFile.get().asFile.bytes
+        def expected = legacyBasenameTimelineMaker.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
+
+import marytts.tools.voiceimport.TimelineWriter
+import marytts.util.data.Datagram
+
+class BasenameTimelineMaker extends DefaultTask {
+
+    @InputFile
+    final RegularFileProperty basenamesFile = newInputFile()
+
+    @InputDirectory
+    final DirectoryProperty pmDir = newInputDirectory()
+
+    @OutputFile
+    final RegularFileProperty destFile = newOutputFile()
+
+    @TaskAction
+    void make() {
+        def sampleRate = project.marytts.voice.samplingRate
+        def timeline = new TimelineWriter(destFile.get().asFile.path, '\n', sampleRate, 2.0);
+        basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
+            def pmFile = pmDir.file("${basename}.pm").get().asFile
+            def lastTime = pmFile.readLines().last().split().first() as float
+            def duration = (lastTime * sampleRate) as int
+            def datagram = new Datagram(duration, basename.bytes)
+            timeline.feed(datagram, sampleRate)
+        }
+        timeline.close()
     }
 }
