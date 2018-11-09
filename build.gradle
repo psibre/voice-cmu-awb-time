@@ -174,6 +174,8 @@ class BasenameDatagramMaker implements Runnable {
 
 class MakeWaveDatagrams extends DefaultTask {
 
+    final WorkerExecutor workerExecutor
+
     @Input
     Property<Integer> sampleRate = project.objects.property(Integer)
 
@@ -189,38 +191,69 @@ class MakeWaveDatagrams extends DefaultTask {
     @OutputDirectory
     final DirectoryProperty destDir = newOutputDirectory()
 
+    @Inject
+    MakeWaveDatagrams(WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor
+    }
+
     @TaskAction
     void make() {
         basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
             def wavFile = wavDir.file("${basename}.wav").get().asFile
             def pmFile = pmDir.file("${basename}.pm").get().asFile
             def destFile = destDir.file("${basename}.json").get().asFile
-            def pm = new ESTTrackReader(pmFile.path)
-            def wav = new WavReader(wavFile.path)
-            def wave = wav.samples
-            def jsonDatagrams = []
-            int frameStart
-            int frameEnd = 0
-            int duration
-            for (int f = 0; f < pm.getNumFrames(); f++) {
-                frameStart = frameEnd
-                frameEnd = (int) ((double) pm.getTime(f) * (double) (sampleRate.get()))
-                duration = frameEnd - frameStart
-                ByteArrayOutputStream buff = new ByteArrayOutputStream(2 * duration)
-                DataOutputStream subWave = new DataOutputStream(buff)
-                for (int k = 0; k < duration; k++) {
-                    subWave.writeShort(wave[frameStart + k])
-                }
-                jsonDatagrams << [
-                        duration: duration,
-                        data    : buff.toByteArray().encodeBase64().toString()
-                ]
+            workerExecutor.submit(WaveDatagramMaker.class) { config ->
+                config.params wavFile, pmFile, destFile, sampleRate.get()
             }
-            def json = new JsonBuilder(jsonDatagrams)
-            destFile.text = json.toPrettyString()
         }
     }
 
+}
+
+class WaveDatagramMaker implements Runnable {
+
+    File wavFile
+
+    File pmFile
+
+    File destFile
+
+    int sampleRate
+
+    @Inject
+    WaveDatagramMaker(File wavFile, File pmFile, File destFile, int sampleRate) {
+        this.wavFile = wavFile
+        this.pmFile = pmFile
+        this.destFile = destFile
+        this.sampleRate = sampleRate
+    }
+
+    @Override
+    void run() {
+        def pm = new ESTTrackReader(pmFile.path)
+        def wav = new WavReader(wavFile.path)
+        def wave = wav.samples
+        def jsonDatagrams = []
+        int frameStart
+        int frameEnd = 0
+        int duration
+        for (int f = 0; f < pm.getNumFrames(); f++) {
+            frameStart = frameEnd
+            frameEnd = (int) ((double) pm.getTime(f) * (double) (sampleRate))
+            duration = frameEnd - frameStart
+            ByteArrayOutputStream buff = new ByteArrayOutputStream(2 * duration)
+            DataOutputStream subWave = new DataOutputStream(buff)
+            for (int k = 0; k < duration; k++) {
+                subWave.writeShort(wave[frameStart + k])
+            }
+            jsonDatagrams << [
+                    duration: duration,
+                    data    : buff.toByteArray().encodeBase64().toString()
+            ]
+        }
+        def json = new JsonBuilder(jsonDatagrams)
+        destFile.text = json.toPrettyString()
+    }
 }
 
 class BasenameTimelineMaker extends DefaultTask {
