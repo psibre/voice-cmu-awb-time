@@ -76,9 +76,10 @@ task makeBasenameDatagrams(type: MakeBasenameDatagrams) {
     destDir = layout.buildDirectory.dir('basenameDatagrams')
 }
 
-task basenameTimelineMaker(type: BasenameTimelineMaker) {
+task basenameTimelineMaker(type: TimelineMaker) {
     basenamesFile = basenames.destFile
     sampleRate = marytts.voice.samplingRate
+    idxIntervalInSeconds = 2.0
     srcDir = makeBasenameDatagrams.destDir
     destFile = layout.buildDirectory.file('timeline_basenames.mry')
 }
@@ -98,6 +99,23 @@ task makeWaveDatagrams(type: MakeWaveDatagrams) {
     wavDir = wav.destDir
     pmDir = pitchmarkConverter.destDir
     destDir = layout.buildDirectory.dir('waveDatagrams')
+}
+
+task waveTimelineMaker(type: TimelineMaker) {
+    basenamesFile = basenames.destFile
+    sampleRate = marytts.voice.samplingRate
+    idxIntervalInSeconds = 0.1
+    srcDir = makeWaveDatagrams.destDir
+    destFile = layout.buildDirectory.file('timeline_waveforms.mry')
+}
+
+task testWaveTimelineMaker {
+    dependsOn waveTimelineMaker, legacyWaveTimelineMaker
+    doLast {
+        def actual = waveTimelineMaker.destFile.get().asFile.bytes
+        def expected = legacyWaveTimelineMaker.destFile.get().asFile.bytes
+        assert actual == expected
+    }
 }
 
 import groovy.json.JsonBuilder
@@ -236,19 +254,20 @@ class WaveDatagramMaker implements Runnable {
         def jsonDatagrams = []
         int frameStart
         int frameEnd = 0
-        int duration
-        for (int f = 0; f < pm.getNumFrames(); f++) {
+        pm.times.each { time ->
             frameStart = frameEnd
-            frameEnd = (int) ((double) pm.getTime(f) * (double) (sampleRate))
-            duration = frameEnd - frameStart
-            ByteArrayOutputStream buff = new ByteArrayOutputStream(2 * duration)
-            DataOutputStream subWave = new DataOutputStream(buff)
-            for (int k = 0; k < duration; k++) {
-                subWave.writeShort(wave[frameStart + k])
+            frameEnd = (time * sampleRate) as int
+            def duration = frameEnd - frameStart
+            def baos = new ByteArrayOutputStream(2 * duration)
+            def dos = new DataOutputStream(baos)
+            if (duration > 0) {
+                (frameStart..frameEnd - 1).each { f ->
+                    dos.writeShort wave[f]
+                }
             }
             jsonDatagrams << [
                     duration: duration,
-                    data    : buff.toByteArray().encodeBase64().toString()
+                    data    : baos.toByteArray().encodeBase64().toString()
             ]
         }
         def json = new JsonBuilder(jsonDatagrams)
@@ -256,10 +275,13 @@ class WaveDatagramMaker implements Runnable {
     }
 }
 
-class BasenameTimelineMaker extends DefaultTask {
+class TimelineMaker extends DefaultTask {
 
     @Input
     Property<Integer> sampleRate = project.objects.property(Integer)
+
+    @Input
+    Property<BigDecimal> idxIntervalInSeconds = project.objects.property(BigDecimal)
 
     @InputFile
     final RegularFileProperty basenamesFile = newInputFile()
@@ -272,7 +294,7 @@ class BasenameTimelineMaker extends DefaultTask {
 
     @TaskAction
     void make() {
-        def timeline = new TimelineWriter(destFile.get().asFile.path, '\n', sampleRate.get(), 2.0);
+        def timeline = new TimelineWriter(destFile.get().asFile.path, '\n', sampleRate.get(), idxIntervalInSeconds.get());
         basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
             def datagramFile = srcDir.file("${basename}.json").get().asFile
             def json = new JsonSlurper().parse(datagramFile)
