@@ -4,6 +4,7 @@ buildscript {
     }
     dependencies {
         classpath("de.dfki.mary:marytts-builder:5.2") {
+            exclude group: '*', module: 'groovy-all'
             exclude group: '*', module: 'mwdumper'
             exclude group: '*', module: 'sgt'
         }
@@ -94,7 +95,11 @@ task testBasenameTimelineMaker {
 import marytts.tools.voiceimport.TimelineWriter
 import marytts.util.data.Datagram
 
+import javax.inject.Inject
+
 class MakeBasenameDatagrams extends DefaultTask {
+
+    final WorkerExecutor workerExecutor
 
     @Input
     Property<Integer> sampleRate = project.objects.property(Integer)
@@ -108,16 +113,46 @@ class MakeBasenameDatagrams extends DefaultTask {
     @OutputDirectory
     final DirectoryProperty destDir = newOutputDirectory()
 
+    @Inject
+    MakeBasenameDatagrams(WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor
+    }
+
     @TaskAction
     void make() {
         basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
-            def pmFile = pmDir.file("${basename}.pm").get().asFile
-            def lastTime = pmFile.readLines().last().split().first() as float
-            def duration = (lastTime * sampleRate.get()) as long
-            destDir.file("${basename}.bin").get().asFile.withDataOutputStream { dos ->
-                dos.writeLong duration
-                dos.writeBytes basename
+            def srcFile = pmDir.file("${basename}.pm").get().asFile
+            def destFile = destDir.file("${basename}.bin").get().asFile
+            workerExecutor.submit(BasenameDatagramMaker.class) { config ->
+                config.params srcFile, destFile, sampleRate.get()
             }
+        }
+    }
+}
+
+class BasenameDatagramMaker implements Runnable {
+
+    File srcFile
+
+    File destFile
+
+    int sampleRate
+
+    @Inject
+    BasenameDatagramMaker(File srcFile, File destFile, int sampleRate) {
+        this.srcFile = srcFile
+        this.destFile = destFile
+        this.sampleRate = sampleRate
+    }
+
+    @Override
+    void run() {
+        def lastTime = srcFile.readLines().last().split().first() as float
+        def duration = (lastTime * sampleRate) as long
+        def basename = srcFile.name - '.pm'
+        destFile.withDataOutputStream { dos ->
+            dos.writeLong duration
+            dos.writeBytes basename
         }
     }
 }
