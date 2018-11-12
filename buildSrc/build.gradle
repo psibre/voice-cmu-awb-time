@@ -4,4 +4,9 @@ repositories {
 
 dependencies {
     runtime project(':gradle-marytts-voicebuilding-plugin')
+    compile group: 'de.dfki.mary', name: 'marytts-builder', version: '5.2', {
+        exclude group: '*', module: 'groovy-all'
+        exclude group: '*', module: 'mwdumper'
+        exclude group: '*', module: 'sgt'
+    }
 }
