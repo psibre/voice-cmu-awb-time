@@ -138,3 +138,7 @@ task testMcepTimelineMaker {
         assert actual == expected
     }
 }
+
+task generateJoinCostWeights(type: GenerateJoinCostWeights) {
+    destFile = incubatingBuildDir.get().file('joinCostWeights.txt')
+}
