@@ -118,10 +118,41 @@ task testWaveTimelineMaker {
     }
 }
 
+task makeMcepDatagrams(type: MakeMcepDatagrams) {
+    basenamesFile = basenames.destFile
+    sampleRate = marytts.voice.samplingRate
+    mcepDir = mcepExtractor.destDir
+    destDir = layout.buildDirectory.dir('mcepDatagrams')
+}
+
+task generateMcepTimelineHeader(type: GenerateMcepTimelineHeader) {
+    srcDir = mcepExtractor.destDir
+    destFile = layout.buildDirectory.file('timeline_mcep.properties')
+}
+
+task mcepTimelineMaker(type: McepTimelineMaker) {
+    basenamesFile = basenames.destFile
+    headerFile = generateMcepTimelineHeader.destFile
+    sampleRate = marytts.voice.samplingRate
+    idxIntervalInSeconds = 0.1
+    srcDir = makeMcepDatagrams.destDir
+    destFile = layout.buildDirectory.file('timeline_mcep.mry')
+}
+
+task testMcepTimelineMaker {
+    dependsOn mcepTimelineMaker, legacyMCepTimelineMaker
+    doLast {
+        def actual = mcepTimelineMaker.destFile.get().asFile.bytes
+        def expected = legacyMCepTimelineMaker.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
+
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import marytts.tools.voiceimport.TimelineWriter
 import marytts.tools.voiceimport.WavReader
+import marytts.unitselection.data.MCepDatagram
 import marytts.util.data.Datagram
 import marytts.util.data.ESTTrackReader
 
@@ -275,6 +306,76 @@ class WaveDatagramMaker implements Runnable {
     }
 }
 
+class MakeMcepDatagrams extends DefaultTask {
+
+    final WorkerExecutor workerExecutor
+
+    @Input
+    Property<Integer> sampleRate = project.objects.property(Integer)
+
+    @InputFile
+    final RegularFileProperty basenamesFile = newInputFile()
+
+    @InputDirectory
+    final DirectoryProperty mcepDir = newInputDirectory()
+
+    @OutputDirectory
+    final DirectoryProperty destDir = newOutputDirectory()
+
+    @Inject
+    MakeMcepDatagrams(WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor
+    }
+
+    @TaskAction
+    void make() {
+        basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
+            def mcepFile = mcepDir.file("${basename}.mcep").get().asFile
+            def destFile = destDir.file("${basename}.json").get().asFile
+            workerExecutor.submit(McepDatagramMaker.class) { config ->
+                config.params mcepFile, destFile, sampleRate.get()
+            }
+        }
+    }
+
+}
+
+class McepDatagramMaker implements Runnable {
+
+    File mcepFile
+
+    File destFile
+
+    int sampleRate
+
+    @Inject
+    McepDatagramMaker(File mcepFile, File destFile, int sampleRate) {
+        this.mcepFile = mcepFile
+        this.destFile = destFile
+        this.sampleRate = sampleRate
+    }
+
+    @Override
+    void run() {
+        def mcep = new ESTTrackReader(mcepFile.path)
+        def jsonDatagrams = []
+        int frameStart
+        int frameEnd = 0
+        mcep.frames.eachWithIndex { frame, f ->
+            frameStart = frameEnd
+            def time = mcep.getTime(f)
+            frameEnd = (time * sampleRate) as int
+            def duration = frameEnd - frameStart
+            jsonDatagrams << [
+                    duration: duration,
+                    coeffs  : frame
+            ]
+        }
+        def json = new JsonBuilder(jsonDatagrams)
+        destFile.text = json.toPrettyString()
+    }
+}
+
 class TimelineMaker extends DefaultTask {
 
     @Input
@@ -300,6 +401,72 @@ class TimelineMaker extends DefaultTask {
             def json = new JsonSlurper().parse(datagramFile)
             json.each { jsonDatagram ->
                 def datagram = new Datagram(jsonDatagram.duration, jsonDatagram.data.decodeBase64())
+                timeline.feed(datagram, sampleRate.get())
+            }
+        }
+        timeline.close()
+    }
+}
+
+class GenerateMcepTimelineHeader extends DefaultTask {
+
+    @InputDirectory
+    final DirectoryProperty srcDir = newInputDirectory()
+
+    @OutputFile
+    final RegularFileProperty destFile = newOutputFile()
+
+    @TaskAction
+    void generate() {
+        // get order, range of values from EST MCEP files
+        def mcepOrder
+        def mcepMin
+        def mcepMax
+        project.fileTree(srcDir).include('*.mcep').each { mcepFile ->
+            def mcep = new ESTTrackReader(mcepFile.path)
+            mcepOrder = mcep.numChannels
+            def minMax = mcep.minMax
+            if (!mcepMin || mcepMin > minMax[0]) {
+                mcepMin = minMax[0]
+            }
+            if (!mcepMax || mcepMax < minMax[1]) {
+                mcepMax = minMax[1]
+            }
+        }
+        assert mcepOrder
+        def mcepRange = (mcepMax - mcepMin) as float
+        // init header
+        def cmd = '\n$ESTDIR/bin/sig2fv -window_type hamming -factor 2.5 -otype est_binary -coefs melcep -melcep_order 12' +
+                ' -fbank_order 24 -shift 0.01 -preemph 0.97 -pm PITCHMARKFILE.pm -o melcepDir/mcepFile.mcep WAVDIR/WAVFILE.wav\n'
+        def props = new Properties()
+        props << [
+                command     : cmd,
+                'mcep.order': mcepOrder as String,
+                'mcep.min'  : mcepMin as String,
+                'mcep.range': mcepRange as String
+        ]
+        props.store(destFile.get().asFile.newOutputStream(), '')
+    }
+}
+
+class McepTimelineMaker extends TimelineMaker {
+
+    @InputFile
+    final RegularFileProperty headerFile = newInputFile()
+
+    @Override
+    @TaskAction
+    void make() {
+        def props = new Properties()
+        props.load(headerFile.get().asFile.newInputStream())
+        def header = new ByteArrayOutputStream()
+        props.store(header, '')
+        def timeline = new TimelineWriter(destFile.get().asFile.path, header.toString('latin1'), sampleRate.get(), idxIntervalInSeconds.get());
+        basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
+            def datagramFile = srcDir.file("${basename}.json").get().asFile
+            def json = new JsonSlurper().parse(datagramFile)
+            json.each { jsonDatagram ->
+                def datagram = new MCepDatagram(jsonDatagram.duration, jsonDatagram.coeffs as float[])
                 timeline.feed(datagram, sampleRate.get())
             }
         }
