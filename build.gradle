@@ -6,6 +6,10 @@ plugins {
 group 'de.dfki.mary'
 version '5.3-SNAPSHOT'
 
+ext {
+    incubatingBuildDir = layout.buildDirectory.dir('mary_new')
+}
+
 marytts.voice {
     name = 'cmu-awb-time'
     language = 'en'
@@ -68,7 +72,7 @@ task basenameTimelineMaker(type: TimelineMaker) {
     sampleRate = marytts.voice.samplingRate
     idxIntervalInSeconds = 2.0
     srcDir = makeBasenameDatagrams.destDir
-    destFile = layout.buildDirectory.file('timeline_basenames.mry')
+    destFile = incubatingBuildDir.get().file('timeline_basenames.mry')
 }
 
 task testBasenameTimelineMaker {
@@ -93,7 +97,7 @@ task waveTimelineMaker(type: TimelineMaker) {
     sampleRate = marytts.voice.samplingRate
     idxIntervalInSeconds = 0.1
     srcDir = makeWaveDatagrams.destDir
-    destFile = layout.buildDirectory.file('timeline_waveforms.mry')
+    destFile = incubatingBuildDir.get().file('timeline_waveforms.mry')
 }
 
 task testWaveTimelineMaker {
@@ -114,7 +118,7 @@ task makeMcepDatagrams(type: MakeMcepDatagrams) {
 
 task generateMcepTimelineHeader(type: GenerateMcepTimelineHeader) {
     srcDir = mcepExtractor.destDir
-    destFile = layout.buildDirectory.file('timeline_mcep.properties')
+    destFile = incubatingBuildDir.get().file('timeline_mcep.properties')
 }
 
 task mcepTimelineMaker(type: McepTimelineMaker) {
@@ -123,7 +127,7 @@ task mcepTimelineMaker(type: McepTimelineMaker) {
     sampleRate = marytts.voice.samplingRate
     idxIntervalInSeconds = 0.1
     srcDir = makeMcepDatagrams.destDir
-    destFile = layout.buildDirectory.file('timeline_mcep.mry')
+    destFile = incubatingBuildDir.get().file('timeline_mcep.mry')
 }
 
 task testMcepTimelineMaker {
