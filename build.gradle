@@ -142,3 +142,20 @@ task testMcepTimelineMaker {
 task generateJoinCostWeights(type: GenerateJoinCostWeights) {
     destFile = incubatingBuildDir.get().file('joinCostWeights.txt')
 }
+
+task joinCostFileMaker(type: JoinCostFileMaker) {
+    weightsFile = generateJoinCostWeights.destFile
+    mcepFile = legacyMCepTimelineMaker.destFile
+    unitFile = legacyHalfPhoneUnitfileWriter.destFile
+    featureFile = legacyAcousticFeatureFileWriter.destFile
+    destFile = incubatingBuildDir.get().file('joinCostFeatures.mry')
+}
+
+task testJoinCostFileMaker {
+    dependsOn joinCostFileMaker, legacyJoinCostFileMaker
+    doLast {
+        def actual = joinCostFileMaker.destFile.get().asFile.bytes
+        def expected = legacyJoinCostFileMaker.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
