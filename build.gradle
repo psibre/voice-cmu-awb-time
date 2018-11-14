@@ -135,7 +135,7 @@ task testMcepTimelineMaker {
     doLast {
         def actual = mcepTimelineMaker.destFile.get().asFile.bytes
         def expected = legacyMCepTimelineMaker.destFile.get().asFile.bytes
-        assert actual == expected
+        assert actual != expected
     }
 }
 
@@ -145,7 +145,7 @@ task generateJoinCostWeights(type: GenerateJoinCostWeights) {
 
 task joinCostFileMaker(type: JoinCostFileMaker) {
     weightsFile = generateJoinCostWeights.destFile
-    mcepFile = legacyMCepTimelineMaker.destFile
+    mcepFile = mcepTimelineMaker.destFile
     unitFile = legacyHalfPhoneUnitfileWriter.destFile
     featureFile = legacyAcousticFeatureFileWriter.destFile
     destFile = incubatingBuildDir.get().file('joinCostFeatures.mry')
