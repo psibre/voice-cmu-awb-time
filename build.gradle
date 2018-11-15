@@ -160,9 +160,28 @@ task testGenerateHalfPhoneFeatureDefinitionFile {
     }
 }
 
-task halfPhoneFeatureFileMaker(type: HalfPhoneFeatureFileMaker) {
+task phoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
+    basenamesFile = basenames.destFile
+    srcDir = phoneUnitFeatureComputer.destDir
+    srcExt = phoneUnitFeatureComputer.outputExt
+    unitFile = legacyPhoneUnitfileWriter.destFile
+    featureDefinitionFile = generatePhoneFeatureDefinitionFile.destFile
+    destFile = incubatingBuildDir.get().file('phoneFeatures.mry')
+}
+
+task testPhoneFeatureFileMaker {
+    dependsOn phoneFeatureFileMaker, legacyPhoneFeatureFileWriter
+    doLast {
+        def actual = phoneFeatureFileMaker.destFile.get().asFile.bytes
+        def expected = legacyPhoneFeatureFileWriter.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
+
+task halfPhoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = halfPhoneUnitFeatureComputer.destDir
+    srcExt = halfPhoneUnitFeatureComputer.outputExt
     unitFile = legacyHalfPhoneUnitfileWriter.destFile
     featureDefinitionFile = generateHalfPhoneFeatureDefinitionFile.destFile
     destFile = incubatingBuildDir.get().file('halfphoneFeatures.mry')

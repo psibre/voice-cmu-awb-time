@@ -4,18 +4,23 @@ import marytts.util.data.MaryHeader
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-class HalfPhoneFeatureFileMaker extends DefaultTask {
+class PhoneFeatureFileMaker extends DefaultTask {
 
     @InputFile
     final RegularFileProperty basenamesFile = newInputFile()
 
     @InputDirectory
     final DirectoryProperty srcDir = newInputDirectory()
+
+    @Input
+    Property<String> srcExt = project.objects.property(String)
 
     @InputFile
     final RegularFileProperty unitFile = newInputFile()
@@ -38,7 +43,7 @@ class HalfPhoneFeatureFileMaker extends DefaultTask {
             dest.writeInt(numUnits)
             basenamesFile.get().asFile.eachLine('UTF-8') { basename ->
                 featureDefinition.createEdgeFeatureVector(0, true).writeTo(dest)
-                def srcFile = srcDir.file("${basename}.hpfeats").get().asFile
+                def srcFile = srcDir.file("${basename}.${srcExt.get()}").get().asFile
                 def featureFileBlock = 0
                 srcFile.eachLine('UTF-8') { line ->
                     if (line.trim().isEmpty()) {
