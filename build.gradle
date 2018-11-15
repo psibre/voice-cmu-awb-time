@@ -160,6 +160,23 @@ task testGenerateHalfPhoneFeatureDefinitionFile {
     }
 }
 
+task halfPhoneFeatureFileMaker(type: HalfPhoneFeatureFileMaker) {
+    basenamesFile = basenames.destFile
+    srcDir = halfPhoneUnitFeatureComputer.destDir
+    unitFile = legacyHalfPhoneUnitfileWriter.destFile
+    featureDefinitionFile = generateHalfPhoneFeatureDefinitionFile.destFile
+    destFile = incubatingBuildDir.get().file('halfphoneFeatures.mry')
+}
+
+task testHalfPhoneFeatureFileMaker {
+    dependsOn halfPhoneFeatureFileMaker, legacyHalfPhoneFeatureFileWriter
+    doLast {
+        def actual = halfPhoneFeatureFileMaker.destFile.get().asFile.bytes
+        def expected = legacyHalfPhoneFeatureFileWriter.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
+
 task generateJoinCostWeights(type: GenerateJoinCostWeights) {
     destFile = incubatingBuildDir.get().file('joinCostWeights.txt')
 }
