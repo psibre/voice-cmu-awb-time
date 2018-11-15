@@ -130,6 +130,20 @@ task mcepTimelineMaker(type: McepTimelineMaker) {
     destFile = incubatingBuildDir.get().file('timeline_mcep.mry')
 }
 
+task generatePhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
+    srcDir = phoneUnitFeatureComputer.destDir
+    destFile = incubatingBuildDir.get().file('phoneUnitFeatureDefinition.txt')
+}
+
+task testGeneratePhoneFeatureDefinitionFile {
+    dependsOn generatePhoneFeatureDefinitionFile, legacyPhoneFeatureFileWriter
+    doLast {
+        def actual = generatePhoneFeatureDefinitionFile.destFile.get().asFile.readLines()
+        def expected = legacyPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
+        assert actual == expected
+    }
+}
+
 task generateJoinCostWeights(type: GenerateJoinCostWeights) {
     destFile = incubatingBuildDir.get().file('joinCostWeights.txt')
 }
