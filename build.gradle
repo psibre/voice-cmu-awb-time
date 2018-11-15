@@ -132,6 +132,7 @@ task mcepTimelineMaker(type: McepTimelineMaker) {
 
 task generatePhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
     srcDir = phoneUnitFeatureComputer.destDir
+    srcExt = phoneUnitFeatureComputer.outputExt
     destFile = incubatingBuildDir.get().file('phoneUnitFeatureDefinition.txt')
 }
 
@@ -140,6 +141,21 @@ task testGeneratePhoneFeatureDefinitionFile {
     doLast {
         def actual = generatePhoneFeatureDefinitionFile.destFile.get().asFile.readLines()
         def expected = legacyPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
+        assert actual == expected
+    }
+}
+
+task generateHalfPhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
+    srcDir = halfPhoneUnitFeatureComputer.destDir
+    srcExt = halfPhoneUnitFeatureComputer.outputExt
+    destFile = incubatingBuildDir.get().file('halfphoneUnitFeatureDefinition.txt')
+}
+
+task testGenerateHalfPhoneFeatureDefinitionFile {
+    dependsOn generateHalfPhoneFeatureDefinitionFile, legacyHalfPhoneFeatureFileWriter
+    doLast {
+        def actual = generateHalfPhoneFeatureDefinitionFile.destFile.get().asFile.readLines()
+        def expected = legacyHalfPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
         assert actual == expected
     }
 }
