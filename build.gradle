@@ -130,6 +130,23 @@ task mcepTimelineMaker(type: McepTimelineMaker) {
     destFile = incubatingBuildDir.get().file('timeline_mcep.mry')
 }
 
+task phoneUnitFileMaker(type: PhoneUnitFileMaker) {
+    basenamesFile = basenames.destFile
+    srcDir = legacyPhoneLabelFeatureAligner.destDir
+    pmDir = pitchmarkConverter.destDir
+    sampleRate = marytts.voice.samplingRate
+    destFile = incubatingBuildDir.get().file('phoneUnits.mry')
+}
+
+task testPhoneUnitFileMaker {
+    dependsOn phoneUnitFileMaker, legacyPhoneUnitfileWriter
+    doLast {
+        def actual = phoneUnitFileMaker.destFile.get().asFile.bytes
+        def expected = legacyPhoneUnitfileWriter.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
+
 task generatePhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
     srcDir = phoneUnitFeatureComputer.destDir
     srcExt = phoneUnitFeatureComputer.outputExt

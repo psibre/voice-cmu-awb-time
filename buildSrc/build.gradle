@@ -9,4 +9,5 @@ dependencies {
         exclude group: '*', module: 'mwdumper'
         exclude group: '*', module: 'sgt'
     }
+    compile group: 'org.m2ci.msp', name: 'jtgt', version: '0.6.1'
 }
