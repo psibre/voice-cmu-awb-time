@@ -133,6 +133,7 @@ task mcepTimelineMaker(type: McepTimelineMaker) {
 task phoneUnitFileMaker(type: PhoneUnitFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = legacyPhoneLabelFeatureAligner.destDir
+    srcExt = 'lab'
     pmDir = pitchmarkConverter.destDir
     sampleRate = marytts.voice.samplingRate
     destFile = incubatingBuildDir.get().file('phoneUnits.mry')
@@ -143,6 +144,24 @@ task testPhoneUnitFileMaker {
     doLast {
         def actual = phoneUnitFileMaker.destFile.get().asFile.bytes
         def expected = legacyPhoneUnitfileWriter.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+}
+
+task halfPhoneUnitFileMaker(type: PhoneUnitFileMaker) {
+    basenamesFile = basenames.destFile
+    srcDir = legacyHalfPhoneLabelFeatureAligner.destDir
+    srcExt = 'hplab'
+    pmDir = pitchmarkConverter.destDir
+    sampleRate = marytts.voice.samplingRate
+    destFile = incubatingBuildDir.get().file('halfphoneUnits.mry')
+}
+
+task testHalfPhoneUnitFileMaker {
+    dependsOn halfPhoneUnitFileMaker, legacyHalfPhoneUnitfileWriter
+    doLast {
+        def actual = halfPhoneUnitFileMaker.destFile.get().asFile.bytes
+        def expected = legacyHalfPhoneUnitfileWriter.destFile.get().asFile.bytes
         assert actual == expected
     }
 }

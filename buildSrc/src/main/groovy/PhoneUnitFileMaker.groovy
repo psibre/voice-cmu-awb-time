@@ -19,6 +19,9 @@ class PhoneUnitFileMaker extends DefaultTask {
     @InputDirectory
     final DirectoryProperty srcDir = newInputDirectory()
 
+    @Input
+    Property<String> srcExt = project.objects.property(String)
+
     @InputDirectory
     final DirectoryProperty pmDir = newInputDirectory()
 
@@ -41,7 +44,7 @@ class PhoneUnitFileMaker extends DefaultTask {
             out.writeLong(utteranceEndSample)
             out.writeInt(-1)
             numUnits++
-            def srcFile = srcDir.file("${basename}.lab").get().asFile
+            def srcFile = srcDir.file("${basename}.${srcExt.get()}").get().asFile
             def unitStartSample = 0
             labSerializer.fromString(srcFile.text).tiers[0].annotations.each { segment ->
                 def unitEndTime = pm.getClosestTime(segment.end)
