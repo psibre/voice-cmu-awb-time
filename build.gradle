@@ -82,6 +82,7 @@ task testBasenameTimelineMaker {
         def expected = legacyBasenameTimelineMaker.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task makeWaveDatagrams(type: MakeWaveDatagrams) {
@@ -107,6 +108,7 @@ task testWaveTimelineMaker {
         def expected = legacyWaveTimelineMaker.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task makeMcepDatagrams(type: MakeMcepDatagrams) {
@@ -146,6 +148,7 @@ task testPhoneUnitFileMaker {
         def expected = legacyPhoneUnitfileWriter.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task halfPhoneUnitFileMaker(type: PhoneUnitFileMaker) {
@@ -164,6 +167,7 @@ task testHalfPhoneUnitFileMaker {
         def expected = legacyHalfPhoneUnitfileWriter.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task generatePhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
@@ -179,6 +183,7 @@ task testGeneratePhoneFeatureDefinitionFile {
         def expected = legacyPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task generateHalfPhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
@@ -194,6 +199,7 @@ task testGenerateHalfPhoneFeatureDefinitionFile {
         def expected = legacyHalfPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task phoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
@@ -212,6 +218,7 @@ task testPhoneFeatureFileMaker {
         def expected = legacyPhoneFeatureFileWriter.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task halfPhoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
@@ -230,6 +237,7 @@ task testHalfPhoneFeatureFileMaker {
         def expected = legacyHalfPhoneFeatureFileWriter.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
 
 task generateJoinCostWeights(type: GenerateJoinCostWeights) {
@@ -251,4 +259,5 @@ task testJoinCostFileMaker {
         def expected = legacyJoinCostFileMaker.destFile.get().asFile.bytes
         assert actual == expected
     }
+    test.dependsOn it
 }
