@@ -1,14 +1,19 @@
 import marytts.unitselection.data.FeatureFileReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-class GenerateDurationFeatureDescription extends DefaultTask {
+class GenerateProsodyFeatureDescription extends DefaultTask {
 
     @InputFile
     final RegularFileProperty srcFile = newInputFile()
+
+    @Input
+    Property<String> targetFeature = project.objects.property(String)
 
     @OutputFile
     final RegularFileProperty destFile = newOutputFile()
@@ -19,7 +24,7 @@ class GenerateDurationFeatureDescription extends DefaultTask {
         def featureDefinition = features.featureDefinition
         destFile.get().asFile.withWriter('UTF-8') { dest ->
             dest.println '('
-            dest.println '(segment_duration float)'
+            dest.println "(${targetFeature.get()} float)"
             def numDiscreteFeatures = featureDefinition.numberOfByteFeatures + featureDefinition.numberOfShortFeatures
             featureDefinition.featureNameArray.eachWithIndex { feature, f ->
                 def values = 'float'

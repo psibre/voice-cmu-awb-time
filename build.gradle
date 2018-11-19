@@ -262,8 +262,9 @@ task testJoinCostFileMaker {
     test.dependsOn it
 }
 
-task generateDurationFeatureDescription(type: GenerateDurationFeatureDescription) {
+task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
+    targetFeature = 'segment_duration'
     destFile = incubatingBuildDir.get().file('dur.desc')
 }
 
@@ -272,6 +273,22 @@ task testGenerateDurationFeatureDescription {
     doLast {
         def actual = generateDurationFeatureDescription.destFile.get().asFile.readLines()
         def expected = file("$buildDir/temp/dur.desc").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
+task generateF0FeatureDescription(type: GenerateProsodyFeatureDescription) {
+    srcFile = phoneFeatureFileMaker.destFile
+    targetFeature = 'f0'
+    destFile = incubatingBuildDir.get().file('f0.desc')
+}
+
+task testGenerateF0FeatureDescription {
+    dependsOn generateF0FeatureDescription, legacyDurationCARTTrainer
+    doLast {
+        def actual = generateF0FeatureDescription.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/f0.desc").readLines()
         assert actual == expected
     }
     test.dependsOn it
