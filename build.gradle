@@ -261,3 +261,18 @@ task testJoinCostFileMaker {
     }
     test.dependsOn it
 }
+
+task generateDurationFeatureDescription(type: GenerateDurationFeatureDescription) {
+    srcFile = phoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('dur.desc')
+}
+
+task testGenerateDurationFeatureDescription {
+    dependsOn generateDurationFeatureDescription, legacyDurationCARTTrainer
+    doLast {
+        def actual = generateDurationFeatureDescription.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/dur.desc").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
