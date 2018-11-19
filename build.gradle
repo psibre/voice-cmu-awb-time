@@ -265,7 +265,7 @@ task testJoinCostFileMaker {
 task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
     targetFeature = 'segment_duration'
-    destFile = incubatingBuildDir.get().file('dur.desc')
+    destFile = layout.buildDirectory.dir('prosody').get().file('dur.desc')
 }
 
 task testGenerateDurationFeatureDescription {
@@ -281,7 +281,7 @@ task testGenerateDurationFeatureDescription {
 task generateF0FeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
     targetFeature = 'f0'
-    destFile = incubatingBuildDir.get().file('f0.desc')
+    destFile = layout.buildDirectory.dir('prosody').get().file('f0.desc')
 }
 
 task testGenerateF0FeatureDescription {
@@ -297,7 +297,7 @@ task testGenerateF0FeatureDescription {
 task extractDurationFeatures(type: ExtractDurationFeatures) {
     unitFile = phoneUnitFileMaker.destFile
     featureFile = phoneFeatureFileMaker.destFile
-    destFile = incubatingBuildDir.get().file('dur.feats')
+    destFile = layout.buildDirectory.dir('prosody').get().file('dur.feats')
 }
 
 task testExtractDurationFeatures {
@@ -313,7 +313,7 @@ task testExtractDurationFeatures {
 task trainDurationCart(type: TrainDurationCart) {
     dataFile = extractDurationFeatures.destFile
     descriptionFile = generateDurationFeatureDescription.destFile
-    destFile = incubatingBuildDir.get().file('dur.tree')
+    destFile = layout.buildDirectory.dir('prosody').get().file('dur.tree')
 }
 
 task testTrainDurationCart {
