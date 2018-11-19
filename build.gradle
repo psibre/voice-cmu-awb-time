@@ -293,3 +293,19 @@ task testGenerateF0FeatureDescription {
     }
     test.dependsOn it
 }
+
+task extractDurationFeatures(type: ExtractDurationFeatures) {
+    unitFile = phoneUnitFileMaker.destFile
+    featureFile = phoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('dur.feats')
+}
+
+task testExtractDurationFeatures {
+    dependsOn extractDurationFeatures, legacyDurationCARTTrainer
+    doLast {
+        def actual = extractDurationFeatures.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/dur.feats").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
