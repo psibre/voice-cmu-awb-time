@@ -325,3 +325,19 @@ task testTrainDurationCart {
     }
     test.dependsOn it
 }
+
+task convertDurationCart(type: ConvertDurationCart) {
+    srcFile = trainDurationCart.destFile
+    featureFile = phoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('dur.tree')
+}
+
+task testConvertDurationCart {
+    dependsOn convertDurationCart, legacyDurationCARTTrainer
+    doLast {
+        def actual = convertDurationCart.destFile.get().asFile.bytes
+        def expected = legacyDurationCARTTrainer.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+    test.dependsOn it
+}
