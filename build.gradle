@@ -309,3 +309,19 @@ task testExtractDurationFeatures {
     }
     test.dependsOn it
 }
+
+task trainDurationCart(type: TrainDurationCart) {
+    dataFile = extractDurationFeatures.destFile
+    descriptionFile = generateDurationFeatureDescription.destFile
+    destFile = incubatingBuildDir.get().file('dur.tree')
+}
+
+task testTrainDurationCart {
+    dependsOn trainDurationCart, legacyDurationCARTTrainer
+    doLast {
+        def actual = trainDurationCart.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/dur.tree").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
