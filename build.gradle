@@ -310,6 +310,13 @@ task testExtractDurationFeatures {
     test.dependsOn it
 }
 
+task extractF0Features(type: ExtractF0Features) {
+    unitFile = phoneUnitFileMaker.destFile
+    featureFile = phoneFeatureFileMaker.destFile
+    timelineFile = waveTimelineMaker.destFile
+    destFile = layout.buildDirectory.dir('prosody').get().file('f0.feats')
+}
+
 task trainDurationCart(type: TrainDurationCart) {
     dataFile = extractDurationFeatures.destFile
     descriptionFile = generateDurationFeatureDescription.destFile
