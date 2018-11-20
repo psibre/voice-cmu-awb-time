@@ -24,7 +24,7 @@ class TrainProsodyCart extends DefaultTask {
     ListProperty<String> ignoreFields = project.objects.listProperty(String)
 
     @OutputFile
-    RegularFileProperty destFile = newOutputFile()
+    final RegularFileProperty destFile = newOutputFile()
 
     @TaskAction
     void train() {

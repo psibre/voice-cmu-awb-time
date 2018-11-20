@@ -324,6 +324,60 @@ task testTrainDurationCart {
     test.dependsOn it
 }
 
+task trainF0LeftCart(type: TrainProsodyCart) {
+    dataFile = extractF0Features.destFile
+    descriptionFile = generateF0FeatureDescription.destFile
+    predictee = 'leftF0'
+    ignoreFields = ['midF0', 'rightF0']
+    destFile = layout.buildDirectory.dir('prosody').get().file('f0.left.tree')
+}
+
+task testTrainF0LeftCart {
+    dependsOn trainF0LeftCart, legacyF0CARTTrainer
+    doLast {
+        def actual = trainF0LeftCart.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/f0.left.tree").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
+task trainF0MidCart(type: TrainProsodyCart) {
+    dataFile = extractF0Features.destFile
+    descriptionFile = generateF0FeatureDescription.destFile
+    predictee = 'midF0'
+    ignoreFields = ['leftF0', 'rightF0']
+    destFile = layout.buildDirectory.dir('prosody').get().file('f0.mid.tree')
+}
+
+task testTrainF0MidCart {
+    dependsOn trainF0MidCart, legacyF0CARTTrainer
+    doLast {
+        def actual = trainF0MidCart.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/f0.mid.tree").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
+task trainF0RightCart(type: TrainProsodyCart) {
+    dataFile = extractF0Features.destFile
+    descriptionFile = generateF0FeatureDescription.destFile
+    predictee = 'rightF0'
+    ignoreFields = ['leftF0', 'midF0']
+    destFile = layout.buildDirectory.dir('prosody').get().file('f0.right.tree')
+}
+
+task testTrainF0RightCart {
+    dependsOn trainF0RightCart, legacyF0CARTTrainer
+    doLast {
+        def actual = trainF0RightCart.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/temp/f0.right.tree").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
 task convertDurationCart(type: ConvertDurationCart) {
     srcFile = trainDurationCart.destFile
     featureFile = phoneFeatureFileMaker.destFile
