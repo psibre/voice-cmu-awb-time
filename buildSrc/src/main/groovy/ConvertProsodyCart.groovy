@@ -9,16 +9,16 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
-class ConvertDurationCart extends DefaultTask {
+class ConvertProsodyCart extends DefaultTask {
 
     @InputFile
-    RegularFileProperty srcFile = newInputFile()
+    final RegularFileProperty srcFile = newInputFile()
 
     @InputFile
-    RegularFileProperty featureFile = newInputFile()
+    final RegularFileProperty featureFile = newInputFile()
 
     @OutputFile
-    RegularFileProperty destFile = newOutputFile()
+    final RegularFileProperty destFile = newOutputFile()
 
     @TaskAction
     void convert() {

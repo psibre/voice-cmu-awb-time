@@ -378,7 +378,7 @@ task testTrainF0RightCart {
     test.dependsOn it
 }
 
-task convertDurationCart(type: ConvertDurationCart) {
+task convertDurationCart(type: ConvertProsodyCart) {
     srcFile = trainDurationCart.destFile
     featureFile = phoneFeatureFileMaker.destFile
     destFile = incubatingBuildDir.get().file('dur.tree')
@@ -389,6 +389,54 @@ task testConvertDurationCart {
     doLast {
         def actual = convertDurationCart.destFile.get().asFile.bytes
         def expected = legacyDurationCARTTrainer.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
+task convertF0LeftCart(type: ConvertProsodyCart) {
+    srcFile = trainF0LeftCart.destFile
+    featureFile = phoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('f0.left.tree')
+}
+
+task testConvertF0LeftCart {
+    dependsOn convertF0LeftCart, legacyF0CARTTrainer
+    doLast {
+        def actual = convertF0LeftCart.destFile.get().asFile.bytes
+        def expected = legacyF0CARTTrainer.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
+task convertF0MidCart(type: ConvertProsodyCart) {
+    srcFile = trainF0MidCart.destFile
+    featureFile = phoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('f0.mid.tree')
+}
+
+task testConvertF0MidCart {
+    dependsOn convertF0MidCart, legacyF0CARTTrainer
+    doLast {
+        def actual = convertF0MidCart.destFile.get().asFile.bytes
+        def expected = legacyF0CARTTrainer.destFile2.get().asFile.bytes
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
+task convertF0RightCart(type: ConvertProsodyCart) {
+    srcFile = trainF0RightCart.destFile
+    featureFile = phoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('f0.right.tree')
+}
+
+task testConvertF0RightCart {
+    dependsOn convertF0RightCart, legacyF0CARTTrainer
+    doLast {
+        def actual = convertF0RightCart.destFile.get().asFile.bytes
+        def expected = legacyF0CARTTrainer.destFile3.get().asFile.bytes
         assert actual == expected
     }
     test.dependsOn it
