@@ -264,7 +264,7 @@ task testJoinCostFileMaker {
 
 task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
-    targetFeature = 'segment_duration'
+    targetFeatures = ['segment_duration']
     destFile = layout.buildDirectory.dir('prosody').get().file('dur.desc')
 }
 
@@ -280,18 +280,8 @@ task testGenerateDurationFeatureDescription {
 
 task generateF0FeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
-    targetFeature = 'f0'
+    targetFeatures = ['leftF0', 'midF0', 'rightF0']
     destFile = layout.buildDirectory.dir('prosody').get().file('f0.desc')
-}
-
-task testGenerateF0FeatureDescription {
-    dependsOn generateF0FeatureDescription, legacyDurationCARTTrainer
-    doLast {
-        def actual = generateF0FeatureDescription.destFile.get().asFile.readLines()
-        def expected = file("$buildDir/temp/f0.desc").readLines()
-        assert actual == expected
-    }
-    test.dependsOn it
 }
 
 task extractDurationFeatures(type: ExtractDurationFeatures) {
@@ -317,9 +307,10 @@ task extractF0Features(type: ExtractF0Features) {
     destFile = layout.buildDirectory.dir('prosody').get().file('f0.feats')
 }
 
-task trainDurationCart(type: TrainDurationCart) {
+task trainDurationCart(type: TrainProsodyCart) {
     dataFile = extractDurationFeatures.destFile
     descriptionFile = generateDurationFeatureDescription.destFile
+    predictee = 'segment_duration'
     destFile = layout.buildDirectory.dir('prosody').get().file('dur.tree')
 }
 

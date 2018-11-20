@@ -1,7 +1,7 @@
 import marytts.unitselection.data.FeatureFileReader
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -13,7 +13,7 @@ class GenerateProsodyFeatureDescription extends DefaultTask {
     final RegularFileProperty srcFile = newInputFile()
 
     @Input
-    Property<String> targetFeature = project.objects.property(String)
+    ListProperty<String> targetFeatures = project.objects.listProperty(String)
 
     @OutputFile
     final RegularFileProperty destFile = newOutputFile()
@@ -24,7 +24,9 @@ class GenerateProsodyFeatureDescription extends DefaultTask {
         def featureDefinition = features.featureDefinition
         destFile.get().asFile.withWriter('UTF-8') { dest ->
             dest.println '('
-            dest.println "(${targetFeature.get()} float)"
+            targetFeatures.get().each { targetFeature ->
+                dest.println "($targetFeature float)"
+            }
             def numDiscreteFeatures = featureDefinition.numberOfByteFeatures + featureDefinition.numberOfShortFeatures
             featureDefinition.featureNameArray.eachWithIndex { feature, f ->
                 def values = 'float'
