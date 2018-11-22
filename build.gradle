@@ -240,6 +240,24 @@ task testHalfPhoneFeatureFileMaker {
     test.dependsOn it
 }
 
+task f0ContourFeatureFileMaker(type: F0ContourFeatureFileMaker) {
+    featureFile = halfPhoneFeatureFileMaker.destFile
+    timelineFile = waveTimelineMaker.destFile
+    unitFile = halfPhoneUnitFileMaker.destFile
+    gender = marytts.voice.gender
+    destFile = incubatingBuildDir.get().file('syllableF0Polynomials.mry')
+}
+
+task testF0ContourFeatureFileMaker {
+    dependsOn f0ContourFeatureFileMaker, legacyF0PolynomialFeatureFileWriter
+    doLast {
+        def actual = f0ContourFeatureFileMaker.destFile.get().asFile.bytes
+        def expected = legacyF0PolynomialFeatureFileWriter.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
 task generateJoinCostWeights(type: GenerateJoinCostWeights) {
     destFile = incubatingBuildDir.get().file('joinCostWeights.txt')
 }
