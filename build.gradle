@@ -258,6 +258,21 @@ task testF0ContourFeatureFileMaker {
     test.dependsOn it
 }
 
+task generateAcousticFeatureDefinitionFile(type: GenerateAcousticFeatureDefinitionFile) {
+    srcFile = halfPhoneFeatureFileMaker.destFile
+    destFile = incubatingBuildDir.get().file('halfphoneUnitFeatureDefinition_ac.txt')
+}
+
+task testGenerateAcousticFeatureDefinitionFile {
+    dependsOn generateAcousticFeatureDefinitionFile, legacyAcousticFeatureFileWriter
+    doLast {
+        def actual = generateAcousticFeatureDefinitionFile.destFile.get().asFile.readLines()
+        def expected = legacyAcousticFeatureFileWriter.destFile2.get().asFile.readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
 task generateJoinCostWeights(type: GenerateJoinCostWeights) {
     destFile = incubatingBuildDir.get().file('joinCostWeights.txt')
 }
