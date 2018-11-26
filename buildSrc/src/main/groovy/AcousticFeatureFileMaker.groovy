@@ -1,7 +1,10 @@
 import marytts.features.FeatureDefinition
+import marytts.features.FeatureVector
 import marytts.unitselection.data.FeatureFileReader
+import marytts.unitselection.data.Unit
 import marytts.unitselection.data.UnitFileReader
 import marytts.util.data.MaryHeader
+import marytts.util.math.ArrayUtils
 import marytts.util.math.Polynomial
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -39,78 +42,112 @@ class AcousticFeatureFileMaker extends DefaultTask {
         writer.println '0 linear | unit_logf0delta'
         def reader = new StringReader(writer.toString())
         def featureDefinition = new FeatureDefinition(new BufferedReader(reader), true)
-        def phoneFeatureIndex = featureDefinition.getFeatureIndex('phone')
-        def silenceFeatureValue = featureDefinition.getFeatureValueAsByte(phoneFeatureIndex, '_')
-        def segmentsFromSyllableStartFeatureIndex = featureDefinition.getFeatureIndex('segs_from_syl_start')
-        def segmentsFromSyllableEndFeatureIndex = featureDefinition.getFeatureIndex('segs_from_syl_end')
-        def vowelFeatureIndex = featureDefinition.getFeatureIndex('ph_vc')
-        def vowelFeatureValue = featureDefinition.getFeatureValueAsByte(vowelFeatureIndex, '+')
         destFile.get().asFile.withDataOutputStream { dest ->
             new MaryHeader(MaryHeader.UNITFEATS).writeTo(dest)
             featureDefinition.writeBinaryTo(dest)
-            dest.writeInt(units.numberOfUnits)
 
-            def syllableFirstUnitIndex = 0
-            def syllableLastUnitIndex
-            def syllableFirstVowelIndex = 0
-            def syllableHasVowel = false
+            int numUnits = units.numberOfUnits
+            dest.writeInt(numUnits)
+            int fiPhoneme = featureDefinition.getFeatureIndex("phone")
+            byte fvPhoneme_0 = featureDefinition.getFeatureValueAsByte(fiPhoneme, "0")
+            byte fvPhoneme_Silence = featureDefinition.getFeatureValueAsByte(fiPhoneme, "_")
+            int fiVowel = featureDefinition.getFeatureIndex("ph_vc")
+            byte fvVowel = featureDefinition.getFeatureValueAsByte(fiVowel, "+")
+            int fiLR = featureDefinition.getFeatureIndex("halfphone_lr")
+            byte fvLR_L = featureDefinition.getFeatureValueAsByte(fiLR, "L")
+            byte fvLR_R = featureDefinition.getFeatureValueAsByte(fiLR, "R")
+            int fiSylStart = featureDefinition.getFeatureIndex("segs_from_syl_start")
+            int fiSylEnd = featureDefinition.getFeatureIndex("segs_from_syl_end")
+            int iSylVowel = -1
+            List<Float> unitDurs = []
 
-            for (def unitIndex = 0; unitIndex < units.numberOfUnits; unitIndex++) {
-                def unit = units.getUnit(unitIndex)
-                def unitFeatures = features.getFeatureVector(unit)
+            int iCurrent = 0
+            for (int i = 0; i < units.numberOfUnits; i++) {
+                FeatureVector inFV = features.getFeatureVector(i)
+                Unit u = units.getUnit(i)
+                float dur = u.duration / sampleRate
 
-                def unitIsSilence = unitFeatures.getByteFeature(phoneFeatureIndex) == silenceFeatureValue
-                if (unit.isEdgeUnit() || unitIsSilence) {
+                // No syllable structure for edge and silence phone entries:
+                if (inFV.getByteFeature(fiPhoneme) == fvPhoneme_0 || inFV.getByteFeature(fiPhoneme) == fvPhoneme_Silence) {
+                    unitDurs << dur
                     continue
                 }
+                // Else, unit belongs to a syllable
+                if (inFV.getByteFeature(fiSylStart) == 0 && inFV.getByteFeature(fiLR) == fvLR_L) {
+                    // first segment in syllable
+                    if (iCurrent < i) { // Something to output before this syllable
+                        assert i - iCurrent == unitDurs.size()
+                        writeFeatureVectors(dest, iCurrent, iSylVowel, i - 1, unitDurs, contours, features, featureDefinition)
+                    }
+                    unitDurs.clear()
+                    iSylVowel = -1
+                    iCurrent = i
+                }
 
-                def unitIsFirstSegmentInSyllable = unitFeatures.getByteFeature(segmentsFromSyllableStartFeatureIndex) == 0
-                if (unitIsFirstSegmentInSyllable) {
-                    syllableFirstUnitIndex = unitIndex
+                unitDurs << dur
+
+                if (inFV.getByteFeature(fiVowel) == fvVowel && iSylVowel == -1) { // the first vowel in the syllable
+                    iSylVowel = i
                 }
-                def unitIsVowel = unitFeatures.getByteFeature(vowelFeatureIndex) == vowelFeatureValue
-                if (unitIsVowel) {
-                    syllableHasVowel = true
-                }
-                def unitIsFirstVowelInSyllable = unitIsVowel && syllableHasVowel
-                if (unitIsFirstVowelInSyllable) {
-                    syllableFirstVowelIndex = unitIndex
-                    syllableHasVowel = false
-                }
-                def unitIsLastSegmentInSyllable = unitFeatures.getByteFeature(segmentsFromSyllableEndFeatureIndex) == 0
-                if (unitIsLastSegmentInSyllable) {
-                    syllableLastUnitIndex = unitIndex
-                    def syllableUnits = units.getUnit((syllableFirstUnitIndex..syllableLastUnitIndex) as int[])
-                    def syllableUnitDurations = []
-                    def syllableUnitStarts = []
-                    def syllableUnitEnds = []
-                    def syllableUnitStart = 0
-                    syllableUnits.each { syllableUnit ->
-                        def syllableUnitDuration = syllableUnit.duration / sampleRate
-                        syllableUnitStarts << syllableUnitStart
-                        syllableUnitDurations << syllableUnitDuration
-                        syllableUnitStart += syllableUnitDuration
-                        syllableUnitEnds << syllableUnitStart
-                    }
-                    def syllableDuration = syllableUnitDurations.sum()
-                    syllableUnits.eachWithIndex { syllableUnit, s ->
-                        def durationInSeconds = syllableUnit.duration / sampleRate
-                        def logF0 = Float.NaN
-                        def logF0Delta = Float.NaN
-                        def coeffs = contours.getFeatureVector(syllableFirstVowelIndex).continuousFeatures as double[]
-                        if (coeffs.any { it != 0 } && durationInSeconds > 0) {
-                            def relativeStart = syllableUnitStarts[s] / syllableDuration
-                            def relativeEnd = syllableUnitEnds[s] / syllableDuration
-                            def contour = Polynomial.generatePolynomialValues(coeffs, 10, relativeStart, relativeEnd)
-                            def unitCoeffs = Polynomial.fitPolynomial(contour, 1)
-                            logF0 = unitCoeffs[1] + 0.5 * unitCoeffs[0]
-                            logF0Delta = unitCoeffs[0]
-                        }
-                        def featureLine = "$unitFeatures $durationInSeconds $logF0 $logF0Delta"
-                        featureDefinition.toFeatureVector(0, featureLine).writeTo(dest)
-                    }
+
+                if (inFV.getByteFeature(fiSylEnd) == 0 && inFV.getByteFeature(fiLR) == fvLR_R) {
+                    // last segment in syllable
+                    writeFeatureVectors(dest, iCurrent, iSylVowel, i, unitDurs, contours, features, featureDefinition)
+                    iSylVowel = -1
+                    unitDurs.clear()
+                    iCurrent = i + 1
                 }
             }
+
+            assert numUnits - iCurrent == unitDurs.size()
+            writeFeatureVectors(dest, iCurrent, iSylVowel, numUnits - 1, unitDurs, contours, features, featureDefinition)
+        }
+    }
+
+    void writeFeatureVectors(DataOutput out, int iFirst, int iVowel, int iLast, List<Float> unitDurs, FeatureFileReader contours, FeatureFileReader features, FeatureDefinition featureDefinition) throws IOException {
+        float[] coeffs
+        if (iVowel != -1) { // Syllable contains a vowel
+            coeffs = contours.getFeatureVector(iVowel).continuousFeatures
+            boolean isZero = true
+            for (int c = 0; c < coeffs.length; c++) {
+                if (coeffs[c] != 0) {
+                    isZero = false
+                    break
+                }
+            }
+            if (isZero) {
+                coeffs = null
+            }
+        }
+        assert unitDurs.size() == iLast - iFirst + 1
+
+        float sylDur = 0
+        for (int i = 0; i < unitDurs.size(); i++) {
+            sylDur += unitDurs.get(i)
+        }
+
+        float uStart = 0
+        for (int i = 0; iFirst + i <= iLast; i++) {
+            float logF0 = Float.NaN
+            float logF0delta = Float.NaN
+            if (coeffs && unitDurs.get(i) > 0) {
+                float relUStart = uStart / sylDur // in [0, 1[
+                float relUEnd = (uStart + unitDurs.get(i)) / sylDur // in [0, 1[
+                double[] predUnitContour = Polynomial.generatePolynomialValues(coeffs as double[], 10, relUStart, relUEnd)
+                // And fit a linear curve to this:
+                double[] unitCoeffs = Polynomial.fitPolynomial(predUnitContour, 1)
+                assert unitCoeffs.length == 2
+                // unitCoeffs[0] is the slope, unitCoeffs[1] the value at left end of interval.
+                // We need the f0 value in the middle of the unit:
+                logF0 = (float) (unitCoeffs[1] + 0.5 * unitCoeffs[0])
+                logF0delta = (float) unitCoeffs[0]
+            }
+
+            FeatureVector fv = features.getFeatureVector(iFirst + i)
+            String line = fv.toString() + " " + unitDurs.get(i) + " " + logF0 + " " + logF0delta
+            FeatureVector outFV = featureDefinition.toFeatureVector(0, line)
+            outFV.writeTo(out)
+            uStart += unitDurs.get(i)
         }
     }
 }
