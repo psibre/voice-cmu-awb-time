@@ -293,6 +293,21 @@ task joinCostFileMaker(type: JoinCostFileMaker) {
     destFile = incubatingBuildDir.get().file('joinCostFeatures.mry')
 }
 
+task generateFeatureSequence(type: GenerateFeatureSequence) {
+    features = ['phone']
+    destFile = incubatingBuildDir.get().file('featureSequence.txt')
+}
+
+task testGenerateFeatureSequence {
+    dependsOn generateFeatureSequence, legacyCARTBuilder
+    doLast {
+        def actual = generateFeatureSequence.destFile.get().asFile.readLines()
+        def expected = file("$buildDir/mary/featureSequence.txt").readLines()
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
 task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
     targetFeatures = ['segment_duration']
