@@ -308,6 +308,22 @@ task testGenerateFeatureSequence {
     test.dependsOn it
 }
 
+task cartBuilder(type: CartBuilder) {
+    featureFile = acousticFeatureFileMaker.destFile
+    featureSequenceFile = generateFeatureSequence.destFile
+    destFile = incubatingBuildDir.get().file('cart.mry')
+}
+
+task testCartBuilder {
+    dependsOn cartBuilder, legacyCARTBuilder
+    doLast {
+        def actual = cartBuilder.destFile.get().asFile.bytes
+        def expected = legacyCARTBuilder.destFile.get().asFile.bytes
+        assert actual == expected
+    }
+    test.dependsOn it
+}
+
 task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
     targetFeatures = ['segment_duration']
