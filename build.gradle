@@ -206,7 +206,7 @@ task phoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = phoneUnitFeatureComputer.destDir
     srcExt = phoneUnitFeatureComputer.outputExt
-    unitFile = legacyPhoneUnitfileWriter.destFile
+    unitFile = phoneUnitFileMaker.destFile
     featureDefinitionFile = generatePhoneFeatureDefinitionFile.destFile
     destFile = incubatingBuildDir.get().file('phoneFeatures.mry')
 }
@@ -225,7 +225,7 @@ task halfPhoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = halfPhoneUnitFeatureComputer.destDir
     srcExt = halfPhoneUnitFeatureComputer.outputExt
-    unitFile = legacyHalfPhoneUnitfileWriter.destFile
+    unitFile = halfPhoneUnitFileMaker.destFile
     featureDefinitionFile = generateHalfPhoneFeatureDefinitionFile.destFile
     destFile = incubatingBuildDir.get().file('halfphoneFeatures.mry')
 }
@@ -288,19 +288,9 @@ task generateJoinCostWeights(type: GenerateJoinCostWeights) {
 task joinCostFileMaker(type: JoinCostFileMaker) {
     weightsFile = generateJoinCostWeights.destFile
     mcepFile = mcepTimelineMaker.destFile
-    unitFile = legacyHalfPhoneUnitfileWriter.destFile
-    featureFile = legacyAcousticFeatureFileWriter.destFile
+    unitFile = halfPhoneUnitFileMaker.destFile
+    featureFile = acousticFeatureFileMaker.destFile
     destFile = incubatingBuildDir.get().file('joinCostFeatures.mry')
-}
-
-task testJoinCostFileMaker {
-    dependsOn joinCostFileMaker, legacyJoinCostFileMaker
-    doLast {
-        def actual = joinCostFileMaker.destFile.get().asFile.bytes
-        def expected = legacyJoinCostFileMaker.destFile.get().asFile.bytes
-        assert actual == expected
-    }
-    test.dependsOn it
 }
 
 task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
