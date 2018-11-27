@@ -151,9 +151,15 @@ task testPhoneUnitFileMaker {
     test.dependsOn it
 }
 
+task splitPhoneLabelsIntoHalfPhones(type: SplitPhoneLabelsIntoHalfPhones) {
+    basenamesFile = basenames.destFile
+    srcDir = legacyPhoneLabelFeatureAligner.destDir
+    destDir = layout.buildDirectory.dir('halfphonelab_aligned_new')
+}
+
 task halfPhoneUnitFileMaker(type: PhoneUnitFileMaker) {
     basenamesFile = basenames.destFile
-    srcDir = legacyHalfPhoneLabelFeatureAligner.destDir
+    srcDir = splitPhoneLabelsIntoHalfPhones.destDir
     srcExt = 'hplab'
     pmDir = pitchmarkConverter.destDir
     sampleRate = marytts.voice.samplingRate
