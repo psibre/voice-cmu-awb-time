@@ -132,6 +132,12 @@ task mcepTimelineMaker(type: McepTimelineMaker) {
     destFile = incubatingBuildDir.get().file('timeline_mcep.mry')
 }
 
+task processPhoneLabels(type: ProcessPhoneLabels) {
+    basenamesFile = basenames.destFile
+    srcDir = lab.destDir
+    destDir = layout.buildDirectory.dir('lab_processed')
+}
+
 task phoneUnitFileMaker(type: PhoneUnitFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = legacyPhoneLabelFeatureAligner.destDir
