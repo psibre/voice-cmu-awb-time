@@ -138,6 +138,13 @@ task processPhoneLabels(type: ProcessPhoneLabels) {
     destDir = layout.buildDirectory.dir('lab_processed')
 }
 
+task alignLabelsWithPrompts(type: AlignLabelsWithPrompts) {
+    basenamesFile = basenames.destFile
+    labDir = lab.destDir
+    maryXmlDir = generateAllophones.destDir
+    destDir = layout.buildDirectory.dir('allophones_new')
+}
+
 task phoneUnitFileMaker(type: PhoneUnitFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = legacyPhoneLabelFeatureAligner.destDir
