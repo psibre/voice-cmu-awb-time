@@ -526,3 +526,13 @@ task testConvertF0RightCart {
     }
     test.dependsOn it
 }
+
+task assembleNew {
+    dependsOn joinCostFileMaker,
+            cartBuilder,
+            convertDurationCart,
+            convertF0LeftCart,
+            convertF0MidCart,
+            convertF0RightCart,
+            basenameTimelineMaker
+}
