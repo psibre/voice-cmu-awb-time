@@ -147,7 +147,7 @@ task alignLabelsWithPrompts(type: AlignLabelsWithPrompts) {
 
 task phoneUnitFileMaker(type: PhoneUnitFileMaker) {
     basenamesFile = basenames.destFile
-    srcDir = legacyPhoneLabelFeatureAligner.destDir
+    srcDir = processPhoneLabels.destDir
     srcExt = 'lab'
     pmDir = pitchmarkConverter.destDir
     sampleRate = marytts.voice.samplingRate
@@ -166,7 +166,7 @@ task testPhoneUnitFileMaker {
 
 task splitPhoneLabelsIntoHalfPhones(type: SplitPhoneLabelsIntoHalfPhones) {
     basenamesFile = basenames.destFile
-    srcDir = legacyPhoneLabelFeatureAligner.destDir
+    srcDir = processPhoneLabels.destDir
     destDir = layout.buildDirectory.dir('halfphonelab_aligned_new')
 }
 
@@ -195,6 +195,8 @@ task generatePhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile
     destFile = incubatingBuildDir.get().file('phoneUnitFeatureDefinition.txt')
 }
 
+phoneUnitFeatureComputer.srcDir = alignLabelsWithPrompts.destDir
+
 task testGeneratePhoneFeatureDefinitionFile {
     dependsOn generatePhoneFeatureDefinitionFile, legacyPhoneFeatureFileWriter
     doLast {
@@ -204,6 +206,8 @@ task testGeneratePhoneFeatureDefinitionFile {
     }
     test.dependsOn it
 }
+
+halfPhoneUnitFeatureComputer.srcDir = alignLabelsWithPrompts.destDir
 
 task generateHalfPhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile) {
     srcDir = halfPhoneUnitFeatureComputer.destDir
