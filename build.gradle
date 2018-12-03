@@ -564,6 +564,91 @@ task convertF0RightCart(type: ConvertProsodyCart) {
 //    test.dependsOn it
 //}
 
+project.generateVoiceConfig {
+    config.get() << [
+            'viterbi.wTargetCosts'    : 0.7,
+            'viterbi.beamsize'        : 100,
+            databaseClass             : 'marytts.unitselection.data.DiphoneUnitDatabase',
+            selectorClass             : 'marytts.unitselection.select.DiphoneUnitSelector',
+            concatenatorClass         : 'marytts.unitselection.concat.OverlapUnitConcatenator',
+            targetCostClass           : 'marytts.unitselection.select.DiphoneFFRTargetCostFunction',
+            joinCostClass             : 'marytts.unitselection.select.JoinCostFeatures',
+            unitReaderClass           : 'marytts.unitselection.data.UnitFileReader',
+            cartReaderClass           : 'marytts.cart.io.MARYCartReader',
+            audioTimelineReaderClass  : 'marytts.unitselection.data.TimelineReader',
+            featureFile               : "MARY_BASE/lib/voices/$project.marytts.voice.name/halfphoneFeatures_ac.mry",
+            targetCostWeights         : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/halfphoneUnitFeatureDefinition_ac.txt",
+            joinCostFile              : "MARY_BASE/lib/voices/$project.marytts.voice.name/joinCostFeatures.mry",
+            joinCostWeights           : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/joinCostWeights.txt",
+            unitsFile                 : "MARY_BASE/lib/voices/$project.marytts.voice.name/halfphoneUnits.mry",
+            cartFile                  : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/cart.mry",
+            audioTimelineFile         : "MARY_BASE/lib/voices/$project.marytts.voice.name/timeline_waveforms.mry",
+            basenameTimeline          : "MARY_BASE/lib/voices/$project.marytts.voice.name/timeline_basenames.mry",
+            acousticModels            : 'duration F0 midF0 rightF0',
+            'duration.model'          : 'cart',
+            'duration.data'           : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/dur.tree",
+            'duration.attribute'      : 'd',
+            'F0.model'                : 'cart',
+            'F0.data'                 : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/f0.left.tree",
+            'F0.attribute'            : 'f0',
+            'F0.attribute.format'     : '(0,%.0f)',
+            'F0.predictFrom'          : 'firstVowels',
+            'F0.applyTo'              : 'firstVoicedSegments',
+            'midF0.model'             : 'cart',
+            'midF0.data'              : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/f0.mid.tree",
+            'midF0.attribute'         : 'f0',
+            'midF0.attribute.format'  : '(50,%.0f)',
+            'midF0.predictFrom'       : 'firstVowels',
+            'midF0.applyTo'           : 'firstVowels',
+            'rightF0.model'           : 'cart',
+            'rightF0.data'            : "jar:/marytts/voice/$project.marytts.voice.nameCamelCase/f0.right.tree",
+            'rightF0.attribute'       : 'f0',
+            'rightF0.attribute.format': '(100,%.0f)',
+            'rightF0.predictFrom'     : 'firstVowels',
+            'rightF0.applyTo'         : 'lastVoicedSegments'
+    ]
+}
+
+processResources {
+    from generateAcousticFeatureDefinitionFile,
+            generateJoinCostWeights,
+            cartBuilder,
+            convertDurationCart,
+            convertF0LeftCart,
+            convertF0MidCart,
+            convertF0RightCart
+    rename { "marytts/voice/$project.marytts.voice.nameCamelCase/$it" }
+}
+
+task processLegacyResources(type: Copy) {
+    from waveTimelineMaker,
+            basenameTimelineMaker,
+            halfPhoneUnitFileMaker,
+            acousticFeatureFileMaker,
+            joinCostFileMaker
+    into layout.buildDirectory.dir('legacy')
+    rename { "lib/voices/$project.marytts.voice.name/$it" }
+}
+
+project.task('runNew', type: JavaExec) {
+    dependsOn processLegacyResources
+    classpath = project.configurations.runtimeClasspath + project.sourceSets.main.output
+    main = 'marytts.server.Mary'
+    systemProperty 'log4j.logger.marytts', 'INFO,stderr'
+    systemProperty 'mary.base', processLegacyResources.destinationDir
+}
+
+dependencies {
+    integrationTestRuntimeOnly "de.dfki.mary:marytts-lang-$project.marytts.voice.language:$project.marytts.version", {
+        exclude group: '*', module: 'groovy-all'
+    }
+}
+
+project.integrationTest {
+    dependsOn processLegacyResources
+    systemProperty 'mary.base', processLegacyResources.destinationDir
+}
+
 task assembleNew {
     dependsOn joinCostFileMaker,
             cartBuilder,
