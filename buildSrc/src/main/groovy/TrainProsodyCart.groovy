@@ -11,6 +11,9 @@ import org.gradle.api.tasks.TaskAction
 class TrainProsodyCart extends DefaultTask {
 
     @InputFile
+    final RegularFileProperty wagon = newInputFile()
+
+    @InputFile
     final RegularFileProperty dataFile = newInputFile()
 
     @InputFile
@@ -29,7 +32,7 @@ class TrainProsodyCart extends DefaultTask {
     @TaskAction
     void train() {
         project.exec {
-            commandLine "$project.speechToolsDir/bin/wagon",
+            commandLine wagon.get().asFile,
                     '-data', dataFile.get().asFile,
                     '-desc', descriptionFile.get().asFile,
                     '-predictee', predictee.get(),
