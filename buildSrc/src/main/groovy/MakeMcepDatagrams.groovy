@@ -7,6 +7,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 
 import javax.inject.Inject
@@ -39,6 +40,7 @@ class MakeMcepDatagrams extends DefaultTask {
             def destFile = destDir.file("${basename}.json").get().asFile
             workerExecutor.submit(McepDatagramMaker.class) { config ->
                 config.params mcepFile, destFile, sampleRate.get()
+                config.isolationMode = IsolationMode.PROCESS
             }
         }
     }
