@@ -78,16 +78,6 @@ task basenameTimelineMaker(type: TimelineMaker) {
     destFile = incubatingBuildDir.get().file('timeline_basenames.mry')
 }
 
-//task testBasenameTimelineMaker {
-//    dependsOn basenameTimelineMaker, legacyBasenameTimelineMaker
-//    doLast {
-//        def actual = basenameTimelineMaker.destFile.get().asFile.bytes
-//        def expected = legacyBasenameTimelineMaker.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task makeWaveDatagrams(type: MakeWaveDatagrams) {
     basenamesFile = basenames.destFile
     sampleRate = marytts.voice.samplingRate
@@ -103,16 +93,6 @@ task waveTimelineMaker(type: TimelineMaker) {
     srcDir = makeWaveDatagrams.destDir
     destFile = incubatingBuildDir.get().file('timeline_waveforms.mry')
 }
-
-//task testWaveTimelineMaker {
-//    dependsOn waveTimelineMaker, legacyWaveTimelineMaker
-//    doLast {
-//        def actual = waveTimelineMaker.destFile.get().asFile.bytes
-//        def expected = legacyWaveTimelineMaker.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task makeMcepDatagrams(type: MakeMcepDatagrams) {
     basenamesFile = basenames.destFile
@@ -157,16 +137,6 @@ task phoneUnitFileMaker(type: PhoneUnitFileMaker) {
     destFile = incubatingBuildDir.get().file('phoneUnits.mry')
 }
 
-//task testPhoneUnitFileMaker {
-//    dependsOn phoneUnitFileMaker, legacyPhoneUnitfileWriter
-//    doLast {
-//        def actual = phoneUnitFileMaker.destFile.get().asFile.bytes
-//        def expected = legacyPhoneUnitfileWriter.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task splitPhoneLabelsIntoHalfPhones(type: SplitPhoneLabelsIntoHalfPhones) {
     basenamesFile = basenames.destFile
     srcDir = processPhoneLabels.destDir
@@ -181,16 +151,6 @@ task halfPhoneUnitFileMaker(type: PhoneUnitFileMaker) {
     sampleRate = marytts.voice.samplingRate
     destFile = incubatingBuildDir.get().file('halfphoneUnits.mry')
 }
-
-//task testHalfPhoneUnitFileMaker {
-//    dependsOn halfPhoneUnitFileMaker, legacyHalfPhoneUnitfileWriter
-//    doLast {
-//        def actual = halfPhoneUnitFileMaker.destFile.get().asFile.bytes
-//        def expected = legacyHalfPhoneUnitfileWriter.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 project.task('featureLister', type: FeatureListerTask) {
     destFile = incubatingBuildDir.get().file('features.txt')
@@ -217,16 +177,6 @@ task generatePhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinitionFile
     destFile = incubatingBuildDir.get().file('phoneUnitFeatureDefinition.txt')
 }
 
-//task testGeneratePhoneFeatureDefinitionFile {
-//    dependsOn generatePhoneFeatureDefinitionFile, legacyPhoneFeatureFileWriter
-//    doLast {
-//        def actual = generatePhoneFeatureDefinitionFile.destFile.get().asFile.readLines()
-//        def expected = legacyPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 project.task('halfPhoneUnitFeatureComputer', type: MaryInterfaceBatchTask) {
     dependsOn featureLister
     srcDir = alignLabelsWithPrompts.destDir
@@ -248,16 +198,6 @@ task generateHalfPhoneFeatureDefinitionFile(type: GeneratePhoneFeatureDefinition
     destFile = incubatingBuildDir.get().file('halfphoneUnitFeatureDefinition.txt')
 }
 
-//task testGenerateHalfPhoneFeatureDefinitionFile {
-//    dependsOn generateHalfPhoneFeatureDefinitionFile, legacyHalfPhoneFeatureFileWriter
-//    doLast {
-//        def actual = generateHalfPhoneFeatureDefinitionFile.destFile.get().asFile.readLines()
-//        def expected = legacyHalfPhoneFeatureFileWriter.destFile2.get().asFile.readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task phoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     basenamesFile = basenames.destFile
     srcDir = phoneUnitFeatureComputer.destDir
@@ -266,16 +206,6 @@ task phoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     featureDefinitionFile = generatePhoneFeatureDefinitionFile.destFile
     destFile = incubatingBuildDir.get().file('phoneFeatures.mry')
 }
-
-//task testPhoneFeatureFileMaker {
-//    dependsOn phoneFeatureFileMaker, legacyPhoneFeatureFileWriter
-//    doLast {
-//        def actual = phoneFeatureFileMaker.destFile.get().asFile.bytes
-//        def expected = legacyPhoneFeatureFileWriter.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task halfPhoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     basenamesFile = basenames.destFile
@@ -286,16 +216,6 @@ task halfPhoneFeatureFileMaker(type: PhoneFeatureFileMaker) {
     destFile = incubatingBuildDir.get().file('halfphoneFeatures.mry')
 }
 
-//task testHalfPhoneFeatureFileMaker {
-//    dependsOn halfPhoneFeatureFileMaker, legacyHalfPhoneFeatureFileWriter
-//    doLast {
-//        def actual = halfPhoneFeatureFileMaker.destFile.get().asFile.bytes
-//        def expected = legacyHalfPhoneFeatureFileWriter.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task f0ContourFeatureFileMaker(type: F0ContourFeatureFileMaker) {
     featureFile = halfPhoneFeatureFileMaker.destFile
     timelineFile = waveTimelineMaker.destFile
@@ -304,30 +224,10 @@ task f0ContourFeatureFileMaker(type: F0ContourFeatureFileMaker) {
     destFile = incubatingBuildDir.get().file('syllableF0Polynomials.mry')
 }
 
-//task testF0ContourFeatureFileMaker {
-//    dependsOn f0ContourFeatureFileMaker, legacyF0PolynomialFeatureFileWriter
-//    doLast {
-//        def actual = f0ContourFeatureFileMaker.destFile.get().asFile.bytes
-//        def expected = legacyF0PolynomialFeatureFileWriter.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task generateAcousticFeatureDefinitionFile(type: GenerateAcousticFeatureDefinitionFile) {
     srcFile = halfPhoneFeatureFileMaker.destFile
     destFile = incubatingBuildDir.get().file('halfphoneUnitFeatureDefinition_ac.txt')
 }
-
-//task testGenerateAcousticFeatureDefinitionFile {
-//    dependsOn generateAcousticFeatureDefinitionFile, legacyAcousticFeatureFileWriter
-//    doLast {
-//        def actual = generateAcousticFeatureDefinitionFile.destFile.get().asFile.readLines()
-//        def expected = legacyAcousticFeatureFileWriter.destFile2.get().asFile.readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task acousticFeatureFileMaker(type: AcousticFeatureFileMaker) {
     featureDefinitionFile = generateAcousticFeatureDefinitionFile.destFile
@@ -354,47 +254,17 @@ task generateFeatureSequence(type: GenerateFeatureSequence) {
     destFile = incubatingBuildDir.get().file('featureSequence.txt')
 }
 
-//task testGenerateFeatureSequence {
-//    dependsOn generateFeatureSequence, legacyCARTBuilder
-//    doLast {
-//        def actual = generateFeatureSequence.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/mary/featureSequence.txt").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task cartBuilder(type: CartBuilder) {
     featureFile = acousticFeatureFileMaker.destFile
     featureSequenceFile = generateFeatureSequence.destFile
     destFile = incubatingBuildDir.get().file('cart.mry')
 }
 
-//task testCartBuilder {
-//    dependsOn cartBuilder, legacyCARTBuilder
-//    doLast {
-//        def actual = cartBuilder.destFile.get().asFile.bytes
-//        def expected = legacyCARTBuilder.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task generateDurationFeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
     targetFeatures = ['segment_duration']
     destFile = layout.buildDirectory.dir('prosody').get().file('dur.desc')
 }
-
-//task testGenerateDurationFeatureDescription {
-//    dependsOn generateDurationFeatureDescription, legacyDurationCARTTrainer
-//    doLast {
-//        def actual = generateDurationFeatureDescription.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/temp/dur.desc").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task generateF0FeatureDescription(type: GenerateProsodyFeatureDescription) {
     srcFile = phoneFeatureFileMaker.destFile
@@ -407,16 +277,6 @@ task extractDurationFeatures(type: ExtractDurationFeatures) {
     featureFile = phoneFeatureFileMaker.destFile
     destFile = layout.buildDirectory.dir('prosody').get().file('dur.feats')
 }
-
-//task testExtractDurationFeatures {
-//    dependsOn extractDurationFeatures, legacyDurationCARTTrainer
-//    doLast {
-//        def actual = extractDurationFeatures.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/temp/dur.feats").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task extractF0Features(type: ExtractF0Features) {
     unitFile = phoneUnitFileMaker.destFile
@@ -432,16 +292,6 @@ task trainDurationCart(type: TrainProsodyCart) {
     destFile = layout.buildDirectory.dir('prosody').get().file('dur.tree')
 }
 
-//task testTrainDurationCart {
-//    dependsOn trainDurationCart, legacyDurationCARTTrainer
-//    doLast {
-//        def actual = trainDurationCart.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/temp/dur.tree").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task trainF0LeftCart(type: TrainProsodyCart) {
     dataFile = extractF0Features.destFile
     descriptionFile = generateF0FeatureDescription.destFile
@@ -449,16 +299,6 @@ task trainF0LeftCart(type: TrainProsodyCart) {
     ignoreFields = ['midF0', 'rightF0']
     destFile = layout.buildDirectory.dir('prosody').get().file('f0.left.tree')
 }
-
-//task testTrainF0LeftCart {
-//    dependsOn trainF0LeftCart, legacyF0CARTTrainer
-//    doLast {
-//        def actual = trainF0LeftCart.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/temp/f0.left.tree").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task trainF0MidCart(type: TrainProsodyCart) {
     dataFile = extractF0Features.destFile
@@ -468,16 +308,6 @@ task trainF0MidCart(type: TrainProsodyCart) {
     destFile = layout.buildDirectory.dir('prosody').get().file('f0.mid.tree')
 }
 
-//task testTrainF0MidCart {
-//    dependsOn trainF0MidCart, legacyF0CARTTrainer
-//    doLast {
-//        def actual = trainF0MidCart.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/temp/f0.mid.tree").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task trainF0RightCart(type: TrainProsodyCart) {
     dataFile = extractF0Features.destFile
     descriptionFile = generateF0FeatureDescription.destFile
@@ -485,16 +315,6 @@ task trainF0RightCart(type: TrainProsodyCart) {
     ignoreFields = ['leftF0', 'midF0']
     destFile = layout.buildDirectory.dir('prosody').get().file('f0.right.tree')
 }
-
-//task testTrainF0RightCart {
-//    dependsOn trainF0RightCart, legacyF0CARTTrainer
-//    doLast {
-//        def actual = trainF0RightCart.destFile.get().asFile.readLines()
-//        def expected = file("$buildDir/temp/f0.right.tree").readLines()
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 tasks.withType(TrainProsodyCart) {
     wagon = file('/usr/local/bin/wagon')
@@ -506,31 +326,11 @@ task convertDurationCart(type: ConvertProsodyCart) {
     destFile = incubatingBuildDir.get().file('dur.tree')
 }
 
-//task testConvertDurationCart {
-//    dependsOn convertDurationCart, legacyDurationCARTTrainer
-//    doLast {
-//        def actual = convertDurationCart.destFile.get().asFile.bytes
-//        def expected = legacyDurationCARTTrainer.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task convertF0LeftCart(type: ConvertProsodyCart) {
     srcFile = trainF0LeftCart.destFile
     featureFile = phoneFeatureFileMaker.destFile
     destFile = incubatingBuildDir.get().file('f0.left.tree')
 }
-
-//task testConvertF0LeftCart {
-//    dependsOn convertF0LeftCart, legacyF0CARTTrainer
-//    doLast {
-//        def actual = convertF0LeftCart.destFile.get().asFile.bytes
-//        def expected = legacyF0CARTTrainer.destFile.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 task convertF0MidCart(type: ConvertProsodyCart) {
     srcFile = trainF0MidCart.destFile
@@ -538,31 +338,11 @@ task convertF0MidCart(type: ConvertProsodyCart) {
     destFile = incubatingBuildDir.get().file('f0.mid.tree')
 }
 
-//task testConvertF0MidCart {
-//    dependsOn convertF0MidCart, legacyF0CARTTrainer
-//    doLast {
-//        def actual = convertF0MidCart.destFile.get().asFile.bytes
-//        def expected = legacyF0CARTTrainer.destFile2.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
-
 task convertF0RightCart(type: ConvertProsodyCart) {
     srcFile = trainF0RightCart.destFile
     featureFile = phoneFeatureFileMaker.destFile
     destFile = incubatingBuildDir.get().file('f0.right.tree')
 }
-
-//task testConvertF0RightCart {
-//    dependsOn convertF0RightCart, legacyF0CARTTrainer
-//    doLast {
-//        def actual = convertF0RightCart.destFile.get().asFile.bytes
-//        def expected = legacyF0CARTTrainer.destFile3.get().asFile.bytes
-//        assert actual == expected
-//    }
-//    test.dependsOn it
-//}
 
 project.generateVoiceConfig {
     config.get() << [
