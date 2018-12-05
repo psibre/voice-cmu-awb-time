@@ -2,7 +2,7 @@ import de.dfki.mary.voicebuilding.tasks.FeatureListerTask
 import de.dfki.mary.voicebuilding.tasks.MaryInterfaceBatchTask
 
 plugins {
-//    id 'de.dfki.mary.voicebuilding-legacy'
+    id 'de.dfki.mary.voicebuilding-legacy-new'
     id 'de.dfki.mary.voicebuilding-festvox'
 }
 

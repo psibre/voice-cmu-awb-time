@@ -1,13 +1,26 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
 repositories {
     jcenter()
 }
 
 dependencies {
-    runtime project(':gradle-marytts-voicebuilding-plugin')
+    compile project(':gradle-marytts-voicebuilding-plugin')
     compile group: 'de.dfki.mary', name: 'marytts-builder', version: '5.2', {
         exclude group: '*', module: 'groovy-all'
         exclude group: '*', module: 'mwdumper'
         exclude group: '*', module: 'sgt'
     }
     compile group: 'org.m2ci.msp', name: 'jtgt', version: '0.6.1'
+}
+
+gradlePlugin {
+    plugins {
+        legacyNew {
+            id = 'de.dfki.mary.voicebuilding-legacy-new'
+            implementationClass = 'VoicebuildingLegacyNewPlugin'
+        }
+    }
 }
