@@ -1,1 +1,2 @@
 include 'gradle-marytts-voicebuilding-plugin'
+enableFeaturePreview('STABLE_PUBLISHING')
