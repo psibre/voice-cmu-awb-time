@@ -269,10 +269,6 @@ class VoicebuildingLegacyNewPlugin implements Plugin<Project> {
             destFile = project.layout.buildDirectory.dir('prosody').get().file('f0.right.tree')
         }
 
-        project.tasks.withType(TrainProsodyCart) {
-            wagon = project.file('/usr/local/bin/wagon')
-        }
-
         project.task('convertDurationCart', type: ConvertProsodyCart) {
             srcFile = project.trainDurationCart.destFile
             featureFile = project.phoneFeatureFileMaker.destFile

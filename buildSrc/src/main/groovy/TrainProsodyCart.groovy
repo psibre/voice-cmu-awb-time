@@ -29,8 +29,16 @@ class TrainProsodyCart extends DefaultTask {
     @OutputFile
     final RegularFileProperty destFile = newOutputFile()
 
+    TrainProsodyCart() {
+        def wagonPath = System.env['PATH'].split(':').collect { dir ->
+            new File(dir, 'wagon')
+        }.find { it.canExecute() }
+        wagon.set(wagonPath)
+    }
+
     @TaskAction
     void train() {
+        assert wagon.get().asFile.canExecute()
         project.exec {
             commandLine wagon.get().asFile,
                     '-data', dataFile.get().asFile,
