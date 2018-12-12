@@ -20,13 +20,6 @@ $ sudo apt-get install default-jdk sox speech-tools
 ```
 accordingly.
 
-### Initializing the build
-
-Do
-```
-$ ./gradlew legacyInit
-```
-
 ### Building the voice
 
 To assemble, test, and package the voice for another MaryTTS installation, do
@@ -42,4 +35,4 @@ To build the voice and run it in an ad-hoc MaryTTS server, do
 ```
 $ ./gradlew run
 ```
-Then, go to [http://localhost:59125](http://localhost:59125/).
+Then, go to <http://localhost:59125>.
