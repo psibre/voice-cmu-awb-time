@@ -1,5 +1,5 @@
 plugins {
-    id 'de.dfki.mary.voicebuilding-legacy-new'
+    id 'de.dfki.mary.voicebuilding-legacy'
     id 'de.dfki.mary.voicebuilding-festvox'
 }
 
