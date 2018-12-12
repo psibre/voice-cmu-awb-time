@@ -14,9 +14,6 @@ addons:
     - sox
     - speech-tools
 
-before_install:
-  - ./gradlew legacyInit
-
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
