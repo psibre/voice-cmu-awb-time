@@ -13,7 +13,7 @@ class VoicebuildingLegacyNewPlugin implements Plugin<Project> {
         project.plugins.apply VoicebuildingDataPlugin
 
         project.ext {
-            incubatingBuildDir = project.layout.buildDirectory.dir('mary_new')
+            incubatingBuildDir = project.layout.buildDirectory.dir('mary')
         }
 
         project.task('makeBasenameDatagrams', type: MakeBasenameDatagrams) {
@@ -361,11 +361,8 @@ class VoicebuildingLegacyNewPlugin implements Plugin<Project> {
             rename { "lib/voices/$project.marytts.voice.name/$it" }
         }
 
-        project.task('runNew', type: JavaExec) {
+        project.run {
             dependsOn project.processLegacyResources
-            classpath = project.configurations.runtimeClasspath + project.sourceSets.main.output
-            main = 'marytts.server.Mary'
-            systemProperty 'log4j.logger.marytts', 'INFO,stderr'
             systemProperty 'mary.base', project.processLegacyResources.destinationDir
         }
 
