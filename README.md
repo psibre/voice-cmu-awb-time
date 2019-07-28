@@ -2,7 +2,7 @@
 
 # voice-cmu-awb-time
 
-A male Scottish English limited-domain unit selection voice for [MaryTTS](http://mary.dfki.de/) built from [recordings provided by CMU](http://festvox.org/cmu_arctic/)
+A male Scottish English limited-domain unit selection voice for [MaryTTS](http://mary.dfki.de/) built from [recordings provided by CMU](http://festvox.org/ldom/ldom_time.html)
 
 ## Prerequisites
 
