@@ -19,9 +19,6 @@ jobs:
           - 11
     runs-on: ${{ matrix.os }}
 
-    env:
-      GRADLE_OPTS: -Dorg.gradle.daemon=false
-
     steps:
       # https://github.com/actions/checkout
       - uses: actions/checkout@v2
@@ -57,6 +54,8 @@ jobs:
         run: brew install speech-tools
 
       - name: Build with Gradle
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
         run: ./gradlew build
 
       - name: Cleanup Gradle Cache
