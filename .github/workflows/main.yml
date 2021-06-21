@@ -50,11 +50,11 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt update
-          sudo apt install -y sox speech-tools
+          sudo apt -y install sox speech-tools
 
       - name: Install macOS prerequisites
         if: ${{ runner.os == 'macOS' }}
-        run: brew install sox speech-tools
+        run: brew install speech-tools
 
       - name: Build with Gradle
         run: ./gradlew build
