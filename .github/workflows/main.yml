@@ -46,10 +46,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Install prerequisites
+      - name: Install Linux prerequisites
+        if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt update
           sudo apt install -y sox speech-tools
+
+      - name: Install macOS prerequisites
+        if: ${{ runner.os == 'macOS' }}
+        run: brew install sox speech-tools
 
       - name: Build with Gradle
         run: ./gradlew build
