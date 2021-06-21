@@ -6,13 +6,15 @@ voice-cmu-awb-time
 
 ### Added
 
-- Testing with Java 9-12
+- Testing with Java 11
+- Testing on macOS
 
 ### Changed
 
 - Build with Gradle v4.10.2
 - Use voicebuilding plugin v5.4
 - Update documentation
+- Migrate CI testing from Travis to GitHub Actions
 - [all changes since v5.2.1]
 
 [v5.2.1] (2018-01-26)
