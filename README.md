@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/marytts/voice-cmu-awb-time.svg?branch=master)](https://travis-ci.org/marytts/voice-cmu-awb-time)
+![Build Status](https://github.com/marytts/voice-cmu-awb-time/workflows/Build/badge.svg)
 
 voice-cmu-awb-time
 ==================
