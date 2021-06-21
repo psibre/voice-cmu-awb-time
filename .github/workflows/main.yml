@@ -20,5 +20,10 @@ jobs:
           distribution: zulu
           java-version: '8'
 
+      - name: Install prerequisites
+        run: |
+          sudo apt update
+          sudo apt install -y sox speech-tools
+
       - name: Build with Gradle
         run: ./gradlew build
